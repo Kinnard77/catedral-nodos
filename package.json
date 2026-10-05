@@ -1,0 +1,29 @@
+{
+    "name": "academia-nodos",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Academia con nodos dinamicos: clasificador de lecciones JAV + rutas de aprendizaje interactivas",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "test": "node scripts/smoke.mjs",
+        "test:e2e": "node scripts/e2e.mjs",
+        "diag": "node scripts/diagnostico.mjs",
+        "capturas": "node scripts/capturar.mjs",
+        "analizar": "node scripts/posiciones.mjs"
+    },
+    "dependencies": {
+        "katex": "^0.16.11",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-react": "^4.3.1",
+        "autoprefixer": "^10.4.19",
+        "postcss": "^8.4.38",
+        "tailwindcss": "^3.4.4",
+        "vite": "^5.3.1"
+    }
+}

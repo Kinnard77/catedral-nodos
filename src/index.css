@@ -1,0 +1,169 @@
+@import 'katex/dist/katex.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    color-scheme: dark;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: #05070d;
+    color: #e6ebf5;
+    font-family: Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+}
+
+/* Fondo de la academia: reticula tenue que sugiere el lienzo de nodos. */
+.bg-grid {
+    background-image:
+        radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.09), transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(167, 139, 250, 0.09), transparent 45%),
+        linear-gradient(to right, rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+    background-size:
+        100% 100%,
+        100% 100%,
+        34px 34px,
+        34px 34px;
+}
+
+.panel {
+    background: linear-gradient(180deg, rgba(20, 27, 43, 0.92), rgba(10, 14, 24, 0.92));
+    border: 1px solid rgba(59, 74, 102, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.sin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.sin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(59, 74, 102, 0.55);
+    border-radius: 999px;
+}
+.sin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(84, 104, 138, 0.75);
+}
+
+/* Contenido de leccion */
+.prosa {
+    color: #dbe3f0;
+    line-height: 1.75;
+    font-size: 0.975rem;
+}
+.prosa p {
+    margin: 0 0 1rem;
+}
+.prosa h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #f1f5fb;
+    margin: 1.6rem 0 0.7rem;
+}
+.prosa h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.03rem;
+    font-weight: 600;
+    color: #e2e8f5;
+    margin: 1.25rem 0 0.55rem;
+}
+.prosa strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+.prosa em {
+    color: #cbd5e6;
+}
+.prosa ul,
+.prosa ol {
+    margin: 0 0 1rem;
+    padding-left: 1.3rem;
+}
+.prosa li {
+    margin-bottom: 0.4rem;
+}
+.prosa ul li {
+    list-style: disc;
+}
+.prosa ol li {
+    list-style: decimal;
+}
+.prosa a {
+    color: #7dd3fc;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.prosa code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.86em;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 5px;
+    padding: 0.1em 0.4em;
+    color: #a5e8ff;
+}
+
+/* KaTeX sobre fondo oscuro */
+.katex {
+    color: #eef4ff;
+    font-size: 1.03em;
+}
+.katex-display {
+    margin: 1.1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.35rem 0;
+}
+
+/* Trazo de conexiones */
+.conexion {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke 260ms ease, stroke-width 260ms ease, opacity 260ms ease;
+}
+.conexion-nueva {
+    stroke-dasharray: 260;
+    animation: dibujar 720ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.cometa {
+    stroke-dasharray: 5 21;
+    animation: cometa 1.35s linear infinite;
+}
+
+@keyframes dibujar {
+    from {
+        stroke-dashoffset: 260;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes cometa {
+    to {
+        stroke-dashoffset: -52;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .conexion-nueva,
+    .cometa,
+    .animate-node-in,
+    .animate-pulse-ring {
+        animation: none !important;
+    }
+}
