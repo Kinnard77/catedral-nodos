@@ -1,9 +1,9 @@
 {
-    "name": "academia-nodos",
+    "name": "catedral-nodos",
     "private": true,
     "version": "0.1.0",
     "type": "module",
-    "description": "Academia con nodos dinamicos: clasificador de lecciones JAV + rutas de aprendizaje interactivas",
+    "description": "Lienzo de Nodos: canvas de nodos dinamicos con despliegue progresivo. Clon de Academia Nodos con nuevo objetivo.",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
