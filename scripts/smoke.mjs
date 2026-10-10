@@ -687,8 +687,14 @@ ok(
 
 const anclajes = anclajesDe(materialValencia)
 ok(anclajes.length === 1, `el material de ejemplo trae un anclaje (${anclajes.length})`)
-ok(tieneGrafo('ANC-01'), 'ese anclaje ya tiene su grafo')
-ok(anclajesConGrafo().includes('ANC-01'), 'y consta en el mapa de grafos por anclaje')
+ok(
+    !tieneGrafo('ANC-01'),
+    'un anclaje NO tiene grafo por llamarse ANC-01: eso era el grafo de ejemplo colandose',
+)
+ok(
+    anclajesConGrafo().length === 0,
+    'y el mapa de grafos esta VACIO: ninguno es del motor todavia',
+)
 const resumenMat = resumenMaterial(materialValencia)
 ok(
     resumenMat.total === materialValencia.length && resumenMat.documentadas === 0,

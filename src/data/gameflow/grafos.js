@@ -13,7 +13,16 @@
 import { gniecEjemplo } from './gniec-ejemplo.js'
 
 export const GRAFOS_POR_ANCLAJE = {
-    'ANC-01': gniecEjemplo,
+    // VACIO A PROPOSITO.
+    //
+    // Aqui estaba el grafo de ejemplo del 4, atado al id `ANC-01`. Y el prompt
+    // le pide al motor que use ids como `ANC-01`, asi que un anclaje REAL del
+    // disenador llamaba a ese boton y el lienzo le ensenaba MI grafo inventado
+    // —«El no-ser: averroismo latino en un epitafio»— como si fuera suyo.
+    //
+    // Eso es mentirle, y es la misma confusion que ya hubo con el material de
+    // ejemplo. Un grafo entra aqui cuando el disenador lo disena: el puente
+    // material -> anclaje -> grafo esta pendiente de construir.
 }
 
 export function grafoDeAnclaje(anclajeId) {

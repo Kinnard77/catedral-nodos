@@ -322,42 +322,28 @@ try {
     )
 
     // --- 6. El grafo del anclaje, desde el final -----------------------------
-    console.log('\n6. El grafo del GN-IEC se despliega desde el final')
-    // La tarjeta se replegó al descartarla y recuperarla: se abre otra vez.
+    console.log('\n6. El material NO ensena grafos que no sean suyos')
+    // Aqui se colaba el grafo de ejemplo del 4: el anclaje real se llamaba ANC-01
+    // —el id que el prompt le sugiere al motor— y el lienzo ensenaba MI grafo
+    // inventado como si fuera del disenador. Esta prueba impide que vuelva.
     await evaluar(`document.querySelector('[data-opcion="ANC-01"] button')?.click()`)
     await esperar(500)
     ok(
         await evaluar(`(() => {
             const b = document.querySelector('[data-ver-grafo="ANC-01"]');
-            if (!b || b.disabled) return false;
-            b.click();
-            return true;
+            return !!b && b.disabled;
         })()`),
-        'se pide el grafo de ese anclaje',
+        'el anclaje dice «Sin grafo todavía»: no se le cuela un grafo ajeno',
     )
     ok(
-        await esperarA(
-            `document.body.innerText.includes('El no-ser') &&
-             document.querySelectorAll('[data-node-id]').length === 1`,
-            { descripcion: 'el núcleo filosófico en el lienzo' },
-        ),
-        'el grafo abre por el FINAL: la herejía, no la piedra',
-    )
-    await evaluar(`document.querySelector('[data-accion="continuar"]')?.click()`)
-    await esperar(1200)
-    ok(
-        await evaluar(`!!document.querySelector('[data-node-id="DIV-01"]')`),
-        'el primer clic revela la divergencia historiador / lingüista',
-    )
-    const etiquetas = await evaluar(
-        `[...document.querySelectorAll('svg text')].map(t => t.textContent).join(' | ')`,
+        !(await texto()).includes('no-ser'),
+        'y el grafo de ejemplo (el averroísmo) no aparece por ninguna parte',
     )
     ok(
-        etiquetas.includes('dialectic_breakthrough'),
-        `las aristas llevan las salidas del GN-IEC (${etiquetas.slice(0, 80)}…)`,
+        !(await evaluar(`!!document.querySelector('[data-node-id]')`)),
+        'el lienzo sigue vacío: nada se ha desplegado solo',
     )
 
-    // --- 7. Añadir una catedral: el material no se mezcla --------------------
     console.log('\n7. El material no se mezcla entre catedrales')
     ok(await evaluar(clicPorTexto('Catedral de Valencia')), 'se reabre la pregunta 0')
     await esperarA('!!document.querySelector("#catedral-nueva")', { descripcion: 'el campo de alta' })
