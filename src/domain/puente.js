@@ -113,6 +113,42 @@ export function tieneFinal(nodos = []) {
     return nodos.some((n) => n.ancla)
 }
 
+/**
+ * Las LECCIONES del grafo de un anclaje, listas para el catalogo del lienzo.
+ *
+ * El lienzo no trabaja con las opciones del material: trabaja con lecciones. Esta
+ * es la traduccion, y es lo que hace que el material sirva para disenar de verdad.
+ *
+ * `deAnclaje` deja claro de que piedra sale cada nodo, para poder reemplazar el
+ * grafo de un anclaje sin tocar el de los demas.
+ */
+export function leccionesDesdeMaterial(opciones = [], anclajeId, catedralId) {
+    // EN ORDEN DE DISENO, y eso no es cosmetico: el lienzo abre por el PRIMER
+    // elemento de la lista, asi que el primero tiene que ser EL FINAL —el nucleo
+    // filosofico—. Si se pasaran en orden de recorrido, el grafo abriria por la
+    // piedra y el diseno iria al reves de como manda el metodo.
+    return ordenDeDiseno(grafoDesdeMaterial(opciones, anclajeId, catedralId)).map((nodo) => ({
+        id: nodo.id,
+        // `lessonId` es lo que el motor del grafo usa para encadenar los pasos.
+        lessonId: nodo.id,
+        title: nodo.titulo,
+        summary: nodo.detalle,
+        // `tipo` es lo que pinta el color del nodo en el lienzo (la clase del
+        // GN-IEC); `subject` es el tema, y se deja en umbra como red de seguridad.
+        tipo: nodo.tipo,
+        subject: 'umbra',
+        level: 1,
+        durationMin: 5,
+        prereq: nodo.prereq,
+        entrega: nodo.juego || nodo.tipo,
+        ancla: nodo.ancla === true,
+        deAnclaje: anclajeId,
+        fuente: nodo.fuente || '',
+        estado: nodo.estado || '',
+        origin: 'material',
+    }))
+}
+
 /** El orden en que se disena: del final hacia atras. Lo ultimo es la piedra. */
 export function ordenDeDiseno(nodos = []) {
     const porId = new Map(nodos.map((n) => [n.id, n]))

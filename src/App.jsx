@@ -7,7 +7,6 @@ import LessonReader from './components/LessonReader.jsx'
 import NuevaPieza from './components/NuevaPieza.jsx'
 import ElegirCatedral from './components/ElegirCatedral.jsx'
 import { useAcademy } from './hooks/useAcademy.js'
-import { tieneGrafo as tieneGrafoDeAnclaje } from './data/gameflow/grafos.js'
 
 export default function App() {
     const [viewport, setViewport] = useState(null)
@@ -71,6 +70,7 @@ export default function App() {
         avisoInvestigacion,
         resultadoInvestigacion,
         verGrafoDe,
+        tieneGrafoDeAnclaje,
         anclajeActivo,
         documentarOpcion,
         desdocumentarOpcion,

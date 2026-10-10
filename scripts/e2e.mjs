@@ -322,26 +322,36 @@ try {
     )
 
     // --- 6. El grafo del anclaje, desde el final -----------------------------
-    console.log('\n6. El material NO ensena grafos que no sean suyos')
-    // Aqui se colaba el grafo de ejemplo del 4: el anclaje real se llamaba ANC-01
-    // —el id que el prompt le sugiere al motor— y el lienzo ensenaba MI grafo
-    // inventado como si fuera del disenador. Esta prueba impide que vuelva.
+    console.log('\n6. El puente: el anclaje abre SU grafo, desde el final')
+    // Antes aqui se comprobaba que NO hubiera grafo, porque el unico que habia era
+    // el de ejemplo haciendose pasar por el del disenador. Ahora el grafo se
+    // construye con el material de la mesa: tiene que ABRIRSE.
     await evaluar(`document.querySelector('[data-opcion="ANC-01"] button')?.click()`)
     await esperar(500)
     ok(
         await evaluar(`(() => {
             const b = document.querySelector('[data-ver-grafo="ANC-01"]');
-            return !!b && b.disabled;
+            return !!b && !b.disabled;
         })()`),
-        'el anclaje dice «Sin grafo todavía»: no se le cuela un grafo ajeno',
+        'el anclaje puede abrir su grafo: hay material sobre la mesa',
+    )
+    await evaluar(`document.querySelector('[data-ver-grafo="ANC-01"]')?.click()`)
+    ok(
+        await esperarA(`document.querySelectorAll('[data-node-id]').length >= 1`, {
+            descripcion: 'el grafo del anclaje en el lienzo',
+        }),
+        'y el lienzo se llena con el grafo de ESE anclaje',
+    )
+    const nodosLienzo = await evaluar(
+        `[...document.querySelectorAll('[data-node-id]')].map((n) => n.getAttribute('data-node-id'))`,
+    )
+    ok(
+        nodosLienzo.includes('FIL-01'),
+        `y abre por el FINAL: el nucleo filosofico del material (${nodosLienzo.join(', ')})`,
     )
     ok(
         !(await texto()).includes('no-ser'),
-        'y el grafo de ejemplo (el averroísmo) no aparece por ninguna parte',
-    )
-    ok(
-        !(await evaluar(`!!document.querySelector('[data-node-id]')`)),
-        'el lienzo sigue vacío: nada se ha desplegado solo',
+        'y NO aparece el grafo de ejemplo: el averroismo ya no se cuela',
     )
 
     console.log('\n7. El material no se mezcla entre catedrales')

@@ -6,6 +6,7 @@ import { elementosDe, faltaFuente, IDIOMA_BASE } from '../domain/elemento.js'
 import { proponerMisterios as pedirMisterios } from '../classifier/misterios.js'
 import { investigarCatedral } from '../classifier/investigacion.js'
 import { materialDe, descartar, desdocumentar, documentar, recuperar } from '../domain/material.js'
+import { grafoDesdeMaterial, leccionesDesdeMaterial, tieneFinal } from '../domain/puente.js'
 import { CLAVES, borrarTodo, guardar, leer } from '../lib/storage.js'
 import {
     aristasEntre,
@@ -428,20 +429,59 @@ export function useAcademy({ viewport = null } = {}) {
         [premisa, settings, catedralActiva, materialCatedral],
     )
 
-    /** Ver el grafo de un anclaje: se clasifica su titulo y se despliega el
-     * grafo, que abre por el final —el nucleo filosofico de ese anclaje—. */
+    /**
+     * VER EL GRAFO DE UN ANCLAJE — el puente, cableado.
+     *
+     * Antes esto clasificaba el titulo con el motor y desplegaba un grafo que no
+     * tenia nada que ver con el material: era el grafo de ejemplo haciendose
+     * pasar por el del disenador. Ahora el grafo SE CONSTRUYE CON EL MATERIAL
+     * que hay sobre la mesa, y se despliega abriendo por el FINAL.
+     *
+     * Las lecciones entran ademas en el catalogo, porque «ver continuacion» las
+     * necesita para revelar hacia atras. Y se reemplazan solo las de ESTE
+     * anclaje: el grafo de una piedra no toca el de otra.
+     */
     const verGrafoDe = useCallback(
-        async (anclajeId) => {
-            const opcion = material.find((o) => o.id === anclajeId)
-            if (!opcion) return null
+        (anclajeId) => {
+            const catedralId = premisa?.catedralId
+            const lecciones = leccionesDesdeMaterial(material, anclajeId, catedralId)
+            if (!lecciones.length) return null
+
             setAnclajeActivo(anclajeId)
-            const resultado = await clasificar(opcion.titulo)
-            if (resultado?.steps?.length) {
-                window.setTimeout(() => reproducir(resultado), 240)
-            }
-            return resultado
+            setGeneradas((prev) => [
+                ...prev.filter((p) => p.deAnclaje !== anclajeId),
+                ...lecciones,
+            ])
+
+            // Se despliega YA, con un indice propio que incluye estas lecciones,
+            // para no esperar a que el catalogo se vuelva a construir.
+            const index = indexar([...catalogo.lessons, ...lecciones])
+            const inicial = inicializarGrafo(lecciones, index, { conBase: false })
+            if (!inicial.visibles.length) return lecciones
+
+            setVisibles(inicial.visibles)
+            setContadores(inicial.contadores)
+            setGrafoEdges(inicial.edges)
+            setRutaOrden(inicial.ruta)
+            setActivo(inicial.activo)
+            setUltimoDespliegue({
+                ids: inicial.visibles,
+                motivo: 'el lienzo abre por el final de este anclaje',
+            })
+            return lecciones
         },
-        [clasificar, material, reproducir],
+        [material, premisa, catalogo.lessons],
+    )
+
+    /**
+     * Que anclajes pueden abrir su grafo: los que tienen material sobre la mesa.
+     * Ya no depende de un mapa fijo de grafos: depende de lo que HAYA.
+     */
+    const tieneGrafoDeAnclaje = useCallback(
+        (anclajeId) => {
+            return tieneFinal(grafoDesdeMaterial(material, anclajeId, premisa?.catedralId))
+        },
+        [material, premisa],
     )
 
     // --- La verificacion a mano ---------------------------------------------
@@ -713,6 +753,7 @@ export function useAcademy({ viewport = null } = {}) {
         avisoInvestigacion,
         resultadoInvestigacion,
         verGrafoDe,
+        tieneGrafoDeAnclaje,
         anclajeActivo,
         // la verificacion a mano
         documentarOpcion,
