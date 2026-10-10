@@ -1,0 +1,29 @@
+/**
+ * UN GRAFO POR ANCLAJE.
+ *
+ * Decision tomada (y aceptada por el disenador): cada elemento visible que se
+ * mapea en una catedral tiene su propio grafo GN-IEC, con su propio final —el
+ * nucleo filosofico— por el que se empieza a disenar.
+ *
+ * Hoy solo hay un anclaje con grafo: el caso del §4 de la especificacion. Los
+ * demas anclajes que aparezcan en el material saldran como «sin grafo todavia»,
+ * y eso es la verdad, no un hueco que haya que disimular.
+ */
+
+import { gniecEjemplo } from './gniec-ejemplo.js'
+
+export const GRAFOS_POR_ANCLAJE = {
+    'ANC-01': gniecEjemplo,
+}
+
+export function grafoDeAnclaje(anclajeId) {
+    return GRAFOS_POR_ANCLAJE[anclajeId] || []
+}
+
+export function tieneGrafo(anclajeId) {
+    return Boolean(GRAFOS_POR_ANCLAJE[anclajeId]?.length)
+}
+
+export function anclajesConGrafo() {
+    return Object.keys(GRAFOS_POR_ANCLAJE)
+}

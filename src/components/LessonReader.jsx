@@ -84,15 +84,15 @@ export default function LessonReader({
                                 <span className="text-slate-600">·</span>
                                 <span>{nivel.label}</span>
                                 <span className="text-slate-600">·</span>
-                                <span>{lesson.durationMin} min</span>
+                                <span>{lesson.durationMin} Min. juego</span>
                                 {lesson.origin === 'generado' && (
                                     <span className="rounded bg-aura-violet/15 px-1.5 py-0.5 font-semibold normal-case text-aura-violet">
-                                        generada por el clasificador
+                                        generada por el motor
                                     </span>
                                 )}
                                 {cursada && (
                                     <span className="rounded bg-aura-mint/15 px-1.5 py-0.5 font-semibold normal-case text-aura-mint">
-                                        cursada
+                                        definida
                                     </span>
                                 )}
                             </div>
@@ -140,12 +140,12 @@ export default function LessonReader({
                             {/* Cierre: ver continuacion */}
                             <div className="mt-8 rounded-2xl border border-aura-cyan/30 bg-gradient-to-br from-aura-cyan/[0.08] to-aura-violet/[0.06] p-4">
                                 <div className="mb-1 font-display text-[13px] font-semibold text-white">
-                                    {completo ? 'Lección terminada' : '¿Sigues ahí?'}
+                                    {completo ? 'Nodo terminado' : '¿Sigues ahí?'}
                                 </div>
                                 <p className="mb-3 text-[12px] leading-relaxed text-slate-400">
                                     {siguientePaso
-                                        ? `Siguiente en la ruta: ${siguientePaso.title}.`
-                                        : 'El clasificador puede seguir desplegando nodos relacionados con lo que acabas de estudiar.'}
+                                        ? `Siguiente en el gameflow: ${siguientePaso.title}.`
+                                        : 'El motor puede seguir desplegando nodos relacionados con lo que acabas de estudiar.'}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     <button
@@ -168,7 +168,7 @@ export default function LessonReader({
                                             onClick={() => onMarcar(lesson.id)}
                                             className="rounded-xl border border-aura-mint/50 px-4 py-2.5 font-display text-[12.5px] text-aura-mint transition-colors hover:bg-aura-mint/10"
                                         >
-                                            Marcar como cursada
+                                            Marcar como definida
                                         </button>
                                     )}
                                 </div>

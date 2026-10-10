@@ -8,7 +8,7 @@ import { setTimeout as esperar } from 'node:timers/promises'
 const PUERTO = 9337
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const PERFIL = `${process.env.TEMP}\\cdp-pos-${Date.now()}`
-const PROMPT = process.argv[2] || 'Quiero aprender el teorema de Pitágoras'
+const PROMPT = process.argv[2] || 'Que el jugador descubra que las marcas de cantero son firmas'
 const INTENTOS = Number(process.argv[3] || 5)
 
 const chrome = spawn(
@@ -68,11 +68,11 @@ try {
     await enviar('Page.navigate', { url: 'http://localhost:5199/' }, sessionId)
     await esperar(2500)
     await evaluar(`(() => {
-        const area = document.getElementById('prompt-academia');
+        const area = document.getElementById('prompt-gameflow');
         const set = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
         set.call(area, ${JSON.stringify(PROMPT)});
         area.dispatchEvent(new Event('input', { bubbles: true }));
-        [...document.querySelectorAll('button')].find(b => b.innerText.includes('Clasificar')).click();
+        [...document.querySelectorAll('button')].find(b => b.innerText.includes('Desplegar')).click();
         return true;
     })()`)
     await esperar(3200)

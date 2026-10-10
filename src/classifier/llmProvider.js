@@ -3,45 +3,53 @@ import { normalizar } from '../data/catalog.js'
 import { BLOCK_KINDS, normalizeRoute, SUBJECT_KEYS } from './contract.js'
 
 /**
- * Sistema de instrucciones del clasificador de lecciones.
- * Es el corazon del producto: define COMO se piensa una ruta.
+ * Sistema de instrucciones del motor de diseno.
+ * Es el corazon del producto: define COMO se piensa un gameflow.
+ *
+ * El metodo del proyecto es el DISENO INVERSO: se parte del final del juego
+ * (que queremos que el jugador sienta y descubra) y se trabaja hacia atras
+ * preguntando que tiene que estar resuelto antes.
  */
-export const SYSTEM_PROMPT = `Eres el clasificador de una academia digital. Recibes la peticion de un alumno y el CATALOGO de lecciones existentes, y devuelves la RUTA de aprendizaje como secuencia ordenada de nodos.
+export const SYSTEM_PROMPT = `Eres el motor de diseno de gameflows de catedrales. Recibes la INTENCION de diseno del autor y el CATALOGO de piezas existentes, y devuelves el GAMEFLOW como secuencia ordenada de nodos.
+
+El metodo es DISENO INVERSO y esto manda sobre todo lo demas:
+1. El paso 1 es SIEMPRE el final del juego: la pieza que lleva "ancla" en el catalogo. Es el punto del que cuelga todo el diseno.
+2. Los pasos siguientes van HACIA ATRAS: cada uno es una pieza que tiene que estar resuelta antes de lo que ya esta en la lista. Un dependiente aparece siempre antes que sus prerrequisitos, nunca despues.
+3. La intencion del autor no elige el punto de partida (que es siempre el final), pero si decide que piezas se marcan y como se justifican. Si la intencion no encaja en el catalogo, dilo en "rationale" en vez de inventar.
 
 Reglas obligatorias:
-1. Trabaja con el catalogo. Cada paso debe referenciar el "id" exacto de una leccion del catalogo. Nunca inventes ids.
-2. Si el catalogo no cubre un concepto necesario, puedes proponer lecciones nuevas en "newLessons". Una leccion nueva puede ser prerequisito (por ejemplo, un fundamento que falta) o continuacion. Maximo 4 por respuesta. Solo cuando sea imprescindible para una ruta coherente.
-3. Ordena los pasos de lo simple a lo complejo respetando los prerrequisitos: ningun paso debe exigir algo que aparezca despues.
-4. La ruta debe llevar al objetivo del alumno en el menor numero de lecciones que siga siendo pedagogicamente solido. Entre 3 y 8 pasos.
-5. Escribe en espanol neutro, claro y directo. Sin adornos ni relleno.
-6. El campo "rationale" de cada paso explica en una frase por que ese nodo va ahi y que aporta al objetivo.
-7. "role" solo puede ser: fundamento, nucleo, practica, extension.
+4. Trabaja con el catalogo. Cada paso debe referenciar el "id" exacto de una pieza del catalogo. Nunca inventes ids.
+5. Si falta una pieza imprescindible, puedes proponerla en "newLessons" (maximo 4 por respuesta). Una pieza nueva debe declarar en "prereq" que necesita, y si es una pieza de arranque, "prereq" vacio.
+6. Escribe en espanol neutro, claro y directo. Sin adornos ni relleno.
+7. El campo "rationale" de cada paso explica en una frase que papel juega esa pieza en el diseno y de que depende lo que viene despues.
+8. "role" solo puede ser: fundamento, nucleo, practica, extension.
 
-Contenido de una leccion nueva:
-- 4 a 8 bloques. Tipos permitidos: markdown, formula, codigo, lista, nota, aviso, datos, quiz.
+Contenido de una pieza nueva:
+- 2 a 6 bloques. Tipos permitidos: markdown, formula, codigo, lista, nota, aviso, datos, quiz.
 - "markdown" usa markdown ligero y puede incluir LaTeX entre $...$ (linea) o $$...$$ (bloque).
 - "formula" usa el campo "tex" con LaTeX puro, sin delimitadores.
-- "codigo" usa "lang" y "text"; el codigo debe ser correcto y ejecutable.
-- "quiz" usa { q, options: string[3], answer: indice correcto, why }.
-- Nada de contenido generico: datos concretos, ejemplos resueltos y errores tipicos reales.
+- "datos" usa "rows": una tabla de comparacion (por ejemplo "que cree el jugador" contra "que descubre").
+- "aviso" marca un RIESGO DE DISENO, no una advertencia generica.
+- "lista" enumera decisiones concretas, no topicos.
+- Nada de contenido de relleno: decisiones de diseno concretas y verificables.
 
 Responde UNICAMENTE con un objeto JSON valido con esta forma exacta:
 {
-  "title": "titulo corto de la ruta",
-  "summary": "una o dos frases sobre la ruta",
-  "subject": "mate | codigo | fisica | datos | lengua",
-  "rationale": "por que esta ruta y no otra",
-  "estimatedMin": 90,
+  "title": "titulo corto del gameflow",
+  "summary": "una o dos frases sobre el diseno",
+  "subject": "final | revelacion | emocion | mecanica | lugar | pista",
+  "rationale": "por que este diseno y no otro",
+  "estimatedMin": 30,
   "steps": [
-    { "order": 1, "lessonId": "id-del-catalogo", "role": "fundamento", "rationale": "..." }
+    { "order": 1, "lessonId": "id-del-ancla", "role": "nucleo", "rationale": "..." }
   ],
   "newLessons": [
     {
-      "id": "mate-slug-corto",
+      "id": "gf-slug-corto",
       "title": "...",
-      "subject": "mate",
+      "subject": "revelacion",
       "level": 1,
-      "durationMin": 15,
+      "durationMin": 5,
       "summary": "...",
       "objectives": ["..."],
       "prereq": ["id-existente-o-vacio"],
@@ -52,6 +60,18 @@ Responde UNICAMENTE con un objeto JSON valido con esta forma exacta:
     }
   ]
 }`
+
+/**
+ * ¿Este proveedor acepta `response_format: json_object`?
+ *
+ * Google AI Studio (endpoint compatible) lo rechaza en varias versiones de su
+ * capa de compatibilidad. Un 400 por un campo OPCIONAL dejaria al usuario sin
+ * conexion sin saber por que, asi que ahi se manda sin modo JSON: los parsers ya
+ * saben sacar el JSON del texto.
+ */
+export function soportaJsonMode(baseUrl = '') {
+    return !/generativelanguage\.googleapis\.com/i.test(String(baseUrl))
+}
 
 const RESPONSE_SCHEMA_HINT = `Recuerda: solo JSON valido, sin texto adicional, sin bloques de codigo alrededor.`
 
@@ -77,8 +97,12 @@ export function buildCatalogMessage(prompt, lessons, contexto = {}) {
 export function parseRouteResponse(raw, prompt, index) {
     const route = normalizeRoute(raw, prompt)
 
+    // Las firmas de los ids del catalogo, para detectar duplicados sin depender
+    // de mayusculas, guiones ni acentos.
+    const firmas = new Set([...index.keys()].map(firmaDeId))
+
     const newLessons = route.newLessons
-        .map((lesson) => sanitizeNewLesson(lesson, index))
+        .map((lesson) => sanitizeNewLesson(lesson, index, firmas))
         .filter(Boolean)
 
     const idsNuevos = new Set(newLessons.map((l) => l.id))
@@ -95,11 +119,29 @@ export function parseRouteResponse(raw, prompt, index) {
     }
 }
 
-function sanitizeNewLesson(raw, index) {
-    const id = normalizar(raw.id || raw.slug || '').replace(/\s+/g, '-')
-    if (!id || id.length < 3 || index.has(id)) return null
+/**
+ * Firma de un id: sin mayusculas, sin acentos y sin separadores.
+ *
+ * Existe por un fallo real: el saneado normalizaba el id que venia y luego lo
+ * buscaba en un indice con las claves ORIGINALES. Con ids en mayusculas y con
+ * guion —como los del GN-IEC (`PHIL-01`)— la busqueda fallaba y el motor podia
+ * colar un nodo duplicado. Ahora se compara por firma.
+ */
+function firmaDeId(valor) {
+    return normalizar(valor).replace(/\s+/g, '')
+}
 
-    const subject = SUBJECT_KEYS.includes(raw.subject) ? raw.subject : 'mate'
+function sanitizeNewLesson(raw, index, firmas = new Set()) {
+    // El id se respeta TAL COMO VIENE: `ANC-01` y no `anc-01`. El disenador usa
+    // mayusculas con guion y cambiarlas romperia la convencion.
+    const id = String(raw.id || raw.slug || '').trim()
+    if (!id || id.length < 3) return null
+
+    const firma = firmaDeId(id)
+    if (firmas.has(firma)) return null
+    firmas.add(firma)
+
+    const subject = SUBJECT_KEYS.includes(raw.subject) ? raw.subject : 'umbra'
     const level = [1, 2, 3].includes(Number(raw.level)) ? Number(raw.level) : 1
 
     const content = (Array.isArray(raw.content) ? raw.content : [])
@@ -213,23 +255,30 @@ export async function callChatCompletions({
     messages,
     temperature = 0.3,
     maxTokens = 4096,
+    jsonMode = true,
     signal,
 }) {
     const url = joinUrl(baseUrl, '/chat/completions')
     const headers = { 'Content-Type': 'application/json' }
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`
 
+    const cuerpo = {
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+    }
+    // `response_format` no lo aceptan todos los proveedores compatibles. Google
+    // AI Studio, por ejemplo, lo rechaza en varias versiones de su capa de
+    // compatibilidad, y un 400 por un campo opcional dejaria al usuario sin
+    // conexion sin saber por que. Los parsers ya saben sacar el JSON del texto.
+    if (jsonMode) cuerpo.response_format = { type: 'json_object' }
+
     const response = await fetch(url, {
         method: 'POST',
         headers,
         signal,
-        body: JSON.stringify({
-            model,
-            messages,
-            temperature,
-            max_tokens: maxTokens,
-            response_format: { type: 'json_object' },
-        }),
+        body: JSON.stringify(cuerpo),
     })
 
     if (!response.ok) {

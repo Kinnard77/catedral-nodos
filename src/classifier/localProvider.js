@@ -1,126 +1,112 @@
-import { normalizar } from '../data/catalog.js'
-import {
-    detectarMateria,
-    emptyRoute,
-    pedagogicalSort,
-    prerequisiteClosure,
-    retrieveLessons,
-    tokenize,
-} from './contract.js'
+import { findAncla, normalizar } from '../data/catalog.js'
+import { emptyRoute, ordenDeDiseno, prerequisiteClosure, retrieveLessons, tokenize } from './contract.js'
 
 /**
- * Clasificador local. No usa red ni API keys: recupera por coincidencia
- * lexica, cierra prerequisitos y ordena por nivel. Es el respaldo cuando
- * el LLM no esta configurado, y el punto de comparacion para validar al LLM.
+ * Motor local del Gameflow de catedrales. No usa red ni API keys.
+ *
+ * No "clasifica" un tema: interpreta la INTENCION de diseño que escribe el
+ * usuario y monta la ruta en orden de diseño inverso, abriendo por el ancla
+ * (el final del juego) y colgando de ella todo lo que hace falta antes.
+ *
+ * El punto de partida NO depende del prompt: siempre es el final. Lo que el
+ * prompt decide es qué piezas de la ruta tocan esa intencion concreta.
  */
 export function createLocalProvider() {
     return {
         id: 'local',
-        label: 'Clasificador local (sin conexion)',
+        label: 'Motor local (sin conexión)',
         async classify(prompt, lessons, index) {
-            const relevancia = retrieveLessons(prompt, lessons, { top: 10 })
-            const materia = detectarMateria(prompt, lessons)
+            const ancla = findAncla(lessons)
 
-            if (!relevancia.length) {
+            if (!ancla) {
                 return {
                     ...emptyRoute(prompt),
                     summary:
-                        'No encontre lecciones del catalogo que respondan a esa peticion. Reformula el objetivo o conecta un LLM para generar lecciones nuevas.',
-                    rationale: 'Sin coincidencias en el catalogo actual.',
+                        'Este catálogo no declara ningún nodo ancla. Sin un final no se puede diseñar hacia atrás: marca la pieza final con `ancla: true`.',
+                    rationale: 'El diseño inverso necesita un final del que colgar el resto.',
                     generatedBy: 'local',
                 }
             }
 
-            // El objetivo de la ruta es la coincidencia mas fuerte; el resto suma.
-            const principal = relevancia[0].lesson
-            const objetivo = materia && principal.subject !== materia
-                ? relevancia.find((r) => r.lesson.subject === materia)?.lesson || principal
-                : principal
+            // Todas las piezas que sostienen el final, de la más profunda al ancla.
+            const camino = prerequisiteClosure(ancla.id, index, { max: 40 })
+            // Diseño inverso: el ancla primero, luego lo que hay que resolver antes.
+            const piezas = ordenDeDiseno(camino)
 
-            const camino = prerequisiteClosure(objetivo.id, index, { max: 7 })
-            const ordenado = pedagogicalSort(camino)
-
-            const refuerzos = relevancia
-                .map((r) => r.lesson)
-                .filter((l) => !ordenado.some((o) => o.id === l.id))
-                .filter((l) => l.subject === objetivo.subject)
-                .slice(0, 2)
-
-            // Los refuerzos son transversales: si se anexaran al final, un
-            // refuerzo podria quedar despues de su propio prerrequisito solo
-            // por venir de otra lista. Se reordena todo junto.
-            const seleccion = pedagogicalSort([...ordenado, ...refuerzos])
+            // Piezas que tocan la intencion escrita. `retrieveLessons` rellena
+            // con el punto de entrada cuando no hay coincidencia: se descarta
+            // ese relleno (score 1) para no marcar medio grafo como relevante.
+            const toca = new Set(
+                retrieveLessons(prompt, lessons, { top: 12 })
+                    .filter((r) => r.score > 1)
+                    .map((r) => r.lesson.id),
+            )
             const tokens = tokenize(prompt)
 
-            // Un acierto debil significa que el catalogo no cubre el objetivo:
-            // la ruta es una sugerencia de punto de partida, no una respuesta.
-            const cobertura = relevancia[0].score
-            const debil = cobertura < 8
+            const steps = piezas.map((pieza, i) => ({
+                lessonId: pieza.id,
+                order: i + 1,
+                role: pieza.id === ancla.id ? 'nucleo' : toca.has(pieza.id) ? 'practica' : 'fundamento',
+                rationale: razon(pieza, ancla, index, toca, tokens),
+            }))
 
             return {
                 ...emptyRoute(prompt),
-                title: tituloDe(prompt, objetivo.title),
-                summary: debil
-                    ? `El catálogo no cubre ese objetivo directamente. Estas ${seleccion.length} lecciones son el punto de entrada más cercano.`
-                    : `Ruta de ${seleccion.length} lecciones para llegar a "${objetivo.title}".`,
-                subject: objetivo.subject,
-                rationale: debil
-                    ? `La coincidencia más fuerte fue "${objetivo.title}" y es débil. Conecta un LLM para que redacte las lecciones que faltan, o reformula la petición.`
-                    : `Coincidencia principal: ${objetivo.title}. Se agregaron ${ordenado.length - 1} prerequisito(s) y ${refuerzos.length} leccion(es) de refuerzo del mismo campo.`,
-                cobertura,
-                debil,
-                estimatedMin: seleccion.reduce((s, l) => s + l.durationMin, 0),
-                steps: seleccion.map((lesson, i) => ({
-                    lessonId: lesson.id,
-                    order: i + 1,
-                    role:
-                        lesson.id === objetivo.id
-                            ? 'nucleo'
-                            : refuerzos.some((r) => r.id === lesson.id)
-                              ? 'practica'
-                              : 'fundamento',
-                    rationale: razon(lesson, objetivo, tokens, {
-                        directo: objetivo.prereq.includes(lesson.id),
-                        esRefuerzo: refuerzos.some((r) => r.id === lesson.id),
-                    }),
-                })),
+                title: tituloDe(prompt, ancla.title),
+                summary: `Diseño inverso desde el final: ${piezas.length} piezas sostienen «${ancla.title}».`,
+                subject: ancla.subject,
+                rationale: `El lienzo abre por el final del juego y revela hacia atrás lo que hace falta antes. Bajo «${ancla.title}» cuelgan ${piezas.length - 1} pieza(s).${
+                    toca.size
+                        ? ` ${toca.size} de ellas tocan la intención que escribiste.`
+                        : ' Ninguna coincide literalmente con tu intención todavía: usa el lienzo para agregarlas.'
+                }`,
+                cobertura: toca.size,
+                debil: toca.size === 0,
+                estimatedMin: piezas.reduce((s, p) => s + (p.durationMin || 0), 0),
+                steps,
                 generatedBy: 'local',
             }
         },
     }
 }
 
-function tituloDe(prompt, tituloObjetivo) {
+function tituloDe(prompt, tituloAncla) {
     const limpio = prompt.trim().replace(/[.?!]+$/, '')
-    if (limpio.length <= 60) {
-        const capitalizado = limpio.charAt(0).toUpperCase() + limpio.slice(1)
-        return capitalizado
-    }
-    return `Ruta hacia ${tituloObjetivo}`
+    if (!limpio) return `Gameflow hacia ${tituloAncla}`
+    if (limpio.length <= 60) return limpio.charAt(0).toUpperCase() + limpio.slice(1)
+    return `Diseno alrededor de ${tituloAncla}`
 }
 
 /**
- * Explica en una frase por que el nodo va en la ruta.
- * Se apoya en la relacion real del catalogo: si la leccion es prerrequisito
- * DIRECTO del objetivo, se dice; si solo es un eslabon intermedio, se marca
- * como base indirecta. Sin repetir la misma frase en toda la secuencia.
+ * Explica el lugar de una pieza en el diseno inverso: de que depende lo que
+ * viene despues, y si toca o no la intencion que escribio el usuario.
  */
-function razon(lesson, objetivo, tokens, { directo = false, esRefuerzo = false } = {}) {
-    if (lesson.id === objetivo.id) {
-        return 'Lección objetivo: cubre directamente lo que pide el prompt.'
+function razon(pieza, ancla, index, toca, tokens) {
+    if (pieza.id === ancla.id) {
+        return 'El final del juego. Todo el diseño cuelga de aquí, así que es lo primero que se decide.'
     }
-    if (esRefuerzo) {
-        return `No es requisito declarado, pero comparte campo con ${objetivo.title} y refuerza la misma habilidad.`
-    }
-    const compartidos = tokens.filter((t) =>
-        normalizar(`${lesson.tags.join(' ')} ${lesson.title} ${lesson.summary}`).includes(t),
-    )
-    const coincidencia = compartidos.length
-        ? ` Trabaja ${compartidos.slice(0, 2).join(' y ')}, que reaparecen en el objetivo.`
-        : ''
 
-    if (directo) {
-        return `Prerrequisito directo de ${objetivo.title}: sin esto, el objetivo se vuelve mecánico.${coincidencia}`
+    const dependientes = [...index.values()]
+        .filter((otra) => otra.prereq.includes(pieza.id))
+        .map((otra) => otra.title)
+
+    let base
+    if (dependientes.length === 0) {
+        base = 'Pieza de arranque: no depende de nada anterior.'
+    } else if (dependientes.includes(ancla.title)) {
+        base = `Pilar del final: «${ancla.title}» no se sostiene sin esta pieza.`
+    } else {
+        const lista = dependientes.slice(0, 2).map((t) => `«${t}»`).join(' y ')
+        base = `Hace falta antes de ${lista}.`
     }
-    return `Eslabón intermedio: sostiene la cadena de prerrequisitos hasta ${objetivo.title}.${coincidencia}`
+
+    if (toca.has(pieza.id)) {
+        const compartidos = tokens.filter((t) =>
+            normalizar(`${pieza.tags.join(' ')} ${pieza.title} ${pieza.summary}`).includes(t),
+        )
+        const eco = compartidos.length ? ` (${compartidos.slice(0, 2).join(', ')})` : ''
+        return `${base} Toca la intención que escribiste${eco}.`
+    }
+
+    return base
 }

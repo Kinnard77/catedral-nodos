@@ -4,13 +4,20 @@ import GraphCanvas from './components/GraphCanvas.jsx'
 import RouteDetails from './components/RouteDetails.jsx'
 import SettingsSheet from './components/SettingsSheet.jsx'
 import LessonReader from './components/LessonReader.jsx'
+import NuevaPieza from './components/NuevaPieza.jsx'
+import ElegirCatedral from './components/ElegirCatedral.jsx'
 import { useAcademy } from './hooks/useAcademy.js'
+import { tieneGrafo as tieneGrafoDeAnclaje } from './data/gameflow/grafos.js'
 
 export default function App() {
     const [viewport, setViewport] = useState(null)
-    const academia = useAcademy({ viewport })
+    const gameflow = useAcademy({ viewport })
     const [ajustesAbiertos, setAjustesAbiertos] = useState(false)
     const [lector, setLector] = useState(null)
+    // Id de la pieza ANTES de la cual se está añadiendo una nueva.
+    const [nuevaAntesDe, setNuevaAntesDe] = useState(null)
+    // La pregunta 0 se reabre a petición; sin catedral está abierta sin remedio.
+    const [preguntaAbierta, setPreguntaAbierta] = useState(false)
     // En pantallas estrechas el lienzo se queda sin espacio: los paneles
     // arrancan cerrados y se abren a peticion.
     const [panelIzq, setPanelIzq] = useState(() =>
@@ -52,7 +59,26 @@ export default function App() {
         pasosVisibles,
         generadas,
         reiniciarProgreso,
-    } = academia
+        agregarAntesDe,
+        catedrales,
+        catedralActiva,
+        elegirCatedral,
+        agregarCatedral,
+        materialCatedral,
+        investigar,
+        investigando,
+        errorInvestigacion,
+        avisoInvestigacion,
+        resultadoInvestigacion,
+        verGrafoDe,
+        anclajeActivo,
+        documentarOpcion,
+        desdocumentarOpcion,
+        descartarOpcion,
+        recuperarDescartadas,
+        // El misterio (fase B) y la ficha de campo quedan retirados de la
+        // interfaz: sus hojas siguen en src/components, no borradas.
+    } = gameflow
 
     const lectorLesson = lector ? catalogoIndex.get(lector) : null
 
@@ -73,6 +99,20 @@ export default function App() {
     )
 
     const cerrarLector = useCallback(() => setLector(null), [])
+
+    /**
+     * Inserta la pieza nueva antes de la que estaba activa y cierra el
+     * formulario: la pieza recién creada queda activa en el lienzo, así que
+     * volver a pulsar "añadir lo que hace falta antes" sigue bajando un nivel.
+     */
+    const crearPiezaAntesDe = useCallback(
+        (borrador) => {
+            if (!nuevaAntesDe) return
+            const resultado = agregarAntesDe(nuevaAntesDe, borrador)
+            if (resultado) setNuevaAntesDe(null)
+        },
+        [agregarAntesDe, nuevaAntesDe],
+    )
 
     const continuarDesdeLector = useCallback(
         (lessonId) => {
@@ -118,6 +158,8 @@ export default function App() {
             if (e.key === 'Escape' && !lector) {
                 setActivo(null)
                 setAjustesAbiertos(false)
+                setNuevaAntesDe(null)
+                setPreguntaAbierta(false)
             }
             if (e.key === ' ' && !enCampo && !lector && activo) {
                 e.preventDefault()
@@ -136,18 +178,25 @@ export default function App() {
         <div className="flex h-full w-full overflow-hidden">
             {panelIzq && (
                 <PromptPanel
-                    prompt={prompt}
-                    setPrompt={setPrompt}
-                    onSubmit={enviarPrompt}
-                    onCancelar={cancelar}
-                    estado={estado}
                     historial={historial}
                     catalogo={catalogo}
                     generadas={generadas}
                     clasificador={clasificador}
                     onAbrirAjustes={() => setAjustesAbiertos(true)}
-                    onReproducirRuta={() => reproducir()}
-                    ruta={ruta}
+                    catedral={catedralActiva}
+                    material={materialCatedral}
+                    onInvestigar={investigar}
+                    investigando={investigando}
+                    errorInvestigacion={errorInvestigacion}
+                    avisoInvestigacion={avisoInvestigacion}
+                    resultadoInvestigacion={resultadoInvestigacion}
+                    onVerGrafo={verGrafoDe}
+                    tieneGrafo={tieneGrafoDeAnclaje}
+                    anclajeActivo={anclajeActivo}
+                    onDocumentar={documentarOpcion}
+                    onDesdocumentar={desdocumentarOpcion}
+                    onDescartar={descartarOpcion}
+                    onRecuperar={recuperarDescartadas}
                 />
             )}
 
@@ -157,16 +206,34 @@ export default function App() {
                     <button
                         type="button"
                         onClick={() => setPanelIzq((v) => !v)}
-                        title={panelIzq ? 'Ocultar panel de consulta' : 'Mostrar panel de consulta'}
+                        title={panelIzq ? 'Ocultar el material' : 'Mostrar el material'}
                         className="flex h-7 items-center rounded-lg border border-ink-700/70 px-2 text-[11px] text-slate-400 transition-colors hover:border-ink-500 hover:text-white"
                     >
-                        {panelIzq ? '◀' : '▶'} Consulta
+                        {panelIzq ? '◀' : '▶'} Material
                     </button>
 
                     <div className="mx-1 h-4 w-px bg-ink-700" />
 
+                    {/* La premisa siempre a la vista: es de lo que cuelga todo. */}
+                    <button
+                        type="button"
+                        data-accion="catedral"
+                        onClick={() => setPreguntaAbierta(true)}
+                        title={catedralActiva ? 'Cambiar de catedral' : 'Elegir la catedral'}
+                        className={`flex h-7 shrink-0 items-center gap-1.5 rounded-lg border px-2 text-[11px] transition-colors ${
+                            catedralActiva
+                                ? 'border-aura-cyan/40 bg-aura-cyan/5 text-slate-300 hover:border-aura-cyan/70 hover:text-white'
+                                : 'border-aura-rose/50 bg-aura-rose/10 text-aura-rose hover:border-aura-rose'
+                        }`}
+                    >
+                        <span className="font-mono text-aura-cyan">⌘</span>
+                        <span className="max-w-[200px] truncate">
+                            {catedralActiva ? catedralActiva.nombre : 'Falta la catedral'}
+                        </span>
+                    </button>
+
                     <div className="min-w-0 flex-1 truncate font-display text-[12.5px] font-semibold text-slate-300">
-                        {ruta ? ruta.title : 'Lienzo de aprendizaje'}
+                        {ruta ? ruta.title : 'Lienzo de gameflow'}
                     </div>
 
                     {ruta && (
@@ -177,17 +244,17 @@ export default function App() {
 
                     {activo && (
                         <span className="hidden shrink-0 rounded-lg bg-ink-800/80 px-2 py-0.5 text-[10.5px] text-slate-400 md:block">
-                            Espacio: ver continuación
+                            Espacio: revelar lo que hace falta antes
                         </span>
                     )}
 
                     <button
                         type="button"
                         onClick={() => setPanelDer((v) => !v)}
-                        title={panelDer ? 'Ocultar panel de ruta' : 'Mostrar panel de ruta'}
+                        title={panelDer ? 'Ocultar panel de gameflow' : 'Mostrar panel de gameflow'}
                         className="flex h-7 items-center rounded-lg border border-ink-700/70 px-2 text-[11px] text-slate-400 transition-colors hover:border-ink-500 hover:text-white"
                     >
-                        Ruta {panelDer ? '▶' : '◀'}
+                        Gameflow {panelDer ? '▶' : '◀'}
                     </button>
                 </div>
 
@@ -205,11 +272,14 @@ export default function App() {
                         onContinuar={continuar}
                         onAbrir={abrirLector}
                         onMarcarCursada={marcarCursada}
+                        onAnadirAntes={setNuevaAntesDe}
                         progreso={progreso}
                         onReiniciar={nuevaConsulta}
                         pendientesActivos={pendientesActivos}
                         desplegando={estado === 'clasificando'}
                         onViewport={setViewport}
+                        catedral={catedralActiva}
+                        material={materialCatedral.length}
                     />
                 </div>
             </main>
@@ -247,6 +317,25 @@ export default function App() {
                 generadas={generadas}
                 completadas={completadas}
                 onReiniciarProgreso={reiniciarProgreso}
+            />
+
+            {/* Paso 0: la pregunta que abre el diseño. Sin catedral no se cierra. */}
+            <ElegirCatedral
+                abierto={!catedralActiva || preguntaAbierta}
+                catedrales={catedrales}
+                catedralActiva={catedralActiva}
+                onElegir={(id) => {
+                    elegirCatedral(id)
+                    setPreguntaAbierta(false)
+                }}
+                onAgregar={agregarCatedral}
+                onCerrar={() => setPreguntaAbierta(false)}
+            />
+
+            <NuevaPieza
+                padre={nuevaAntesDe ? catalogoIndex.get(nuevaAntesDe) : null}
+                onCerrar={() => setNuevaAntesDe(null)}
+                onCrear={crearPiezaAntesDe}
             />
 
             {lectorLesson && (

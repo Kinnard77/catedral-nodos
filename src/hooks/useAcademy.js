@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildCatalog, createClassifier, DEFAULT_LLM } from '../classifier/index.js'
-import { buildEdges, indexById, resolveIds } from '../data/catalog.js'
+import { buildEdges, indexById, normalizar, resolveIds } from '../data/catalog.js'
+import { CATEDRALES, unirCatedrales } from '../data/catedrales.js'
+import { elementosDe, faltaFuente, IDIOMA_BASE } from '../domain/elemento.js'
+import { proponerMisterios as pedirMisterios } from '../classifier/misterios.js'
+import { investigarCatedral } from '../classifier/investigacion.js'
+import { materialDe, descartar, desdocumentar, documentar, recuperar } from '../domain/material.js'
 import { CLAVES, borrarTodo, guardar, leer } from '../lib/storage.js'
 import {
     aristasEntre,
@@ -16,12 +21,47 @@ const SETTINGS_DEFAULT = {
     jav: { endpoint: '', apiKey: '' },
 }
 
-/** Estado de la academia: catalogo, clasificador, ruta y grafo desplegado. */
+/** Estado del diseno: catalogo, motor, gameflow y grafo desplegado. */
 export function useAcademy({ viewport = null } = {}) {
     const [settings, setSettings] = useState(() => fusionar(leer(CLAVES.settings), SETTINGS_DEFAULT))
     const [generadas, setGeneradas] = useState(() => leer(CLAVES.generated, []) || [])
+    const [enlaces, setEnlaces] = useState(() => leer(CLAVES.enlaces, {}) || {})
     const [completadas, setCompletadas] = useState(() => leer(CLAVES.progreso, []) || [])
     const [historial, setHistorial] = useState(() => leer(CLAVES.historial, []) || [])
+
+    // --- La premisa: en qué catedral se trabaja (la pregunta 0 del diseño) ---
+    const [catedralesPropias, setCatedralesPropias] = useState(() => leer(CLAVES.catedrales, []) || [])
+    const [premisa, setPremisa] = useState(() => leer(CLAVES.premisa, null))
+
+    // --- El material: los elementos de la catedral elegida -------------------
+    const [elementos, setElementos] = useState(() => leer(CLAVES.elementos, []) || [])
+
+    // --- El material de las catedrales (el 80% de la investigacion) ----------
+    // SIN MATERIAL DE EJEMPLO. Antes se sembraba aqui el material del 4 que
+    // escribio el agente, y el disenador lo cazo: aparecia mezclado con lo que
+    // trae el motor y no habia forma de saber que era suyo y que era de la IA.
+    // «Elimina todos y veamos si la herramienta funciona y nos trae nuevos.»
+    //
+    // La limpieza es UNA sola vez: lo que hubiera era de ejemplo o de pruebas
+    // anteriores. A partir de ahi, lo que haya es lo que haya traido el motor.
+    const [material, setMaterial] = useState(() => {
+        if (!leer(CLAVES.materialLimpiado, false)) {
+            guardar(CLAVES.materialLimpiado, true)
+            guardar(CLAVES.material, [])
+            return []
+        }
+        return leer(CLAVES.material, []) || []
+    })
+    const [investigando, setInvestigando] = useState(false)
+    const [errorInvestigacion, setErrorInvestigacion] = useState(null)
+    const [avisoInvestigacion, setAvisoInvestigacion] = useState('')
+    const [resultadoInvestigacion, setResultadoInvestigacion] = useState('')
+    const [anclajeActivo, setAnclajeActivo] = useState(null)
+
+    // --- Las propuestas del motor, por catedral ------------------------------
+    const [propuestas, setPropuestas] = useState(() => leer(CLAVES.propuestas, {}) || {})
+    const [proponiendo, setProponiendo] = useState(false)
+    const [errorMisterios, setErrorMisterios] = useState(null)
 
     const [prompt, setPrompt] = useState('')
     const [estado, setEstado] = useState('inicial') // inicial | clasificando | listo | error
@@ -38,11 +78,17 @@ export function useAcademy({ viewport = null } = {}) {
     const abortRef = useRef(null)
 
     const catalogo = useMemo(() => {
-        const { lessons } = buildCatalog(generadas)
+        const { lessons } = buildCatalog(generadas, enlaces)
         return { lessons, index: indexById(lessons), edges: buildEdges(lessons) }
-    }, [generadas])
+    }, [generadas, enlaces])
 
     const clasificador = useMemo(() => createClassifier(settings), [settings])
+
+    const catedrales = useMemo(() => unirCatedrales(CATEDRALES, catedralesPropias), [catedralesPropias])
+    const catedralActiva = useMemo(
+        () => (premisa?.catedralId ? catedrales.find((c) => c.id === premisa.catedralId) || null : null),
+        [premisa, catedrales],
+    )
 
     useEffect(() => {
         guardar(CLAVES.settings, settings)
@@ -50,6 +96,24 @@ export function useAcademy({ viewport = null } = {}) {
     useEffect(() => {
         guardar(CLAVES.generated, generadas)
     }, [generadas])
+    useEffect(() => {
+        guardar(CLAVES.enlaces, enlaces)
+    }, [enlaces])
+    useEffect(() => {
+        guardar(CLAVES.catedrales, catedralesPropias)
+    }, [catedralesPropias])
+    useEffect(() => {
+        guardar(CLAVES.premisa, premisa)
+    }, [premisa])
+    useEffect(() => {
+        guardar(CLAVES.elementos, elementos)
+    }, [elementos])
+    useEffect(() => {
+        guardar(CLAVES.material, material)
+    }, [material])
+    useEffect(() => {
+        guardar(CLAVES.propuestas, propuestas)
+    }, [propuestas])
     useEffect(() => {
         guardar(CLAVES.progreso, completadas)
     }, [completadas])
@@ -125,7 +189,7 @@ export function useAcademy({ viewport = null } = {}) {
         (rutaObjetivo = ruta) => {
             if (!rutaObjetivo?.steps?.length) return
             const index = indexar(catalogo.lessons)
-            const inicial = inicializarGrafo(rutaObjetivo.steps, index)
+            const inicial = inicializarGrafo(rutaObjetivo.steps, index, { conBase: false })
             if (!inicial.visibles.length) return
 
             setVisibles(inicial.visibles)
@@ -135,7 +199,7 @@ export function useAcademy({ viewport = null } = {}) {
             setActivo(inicial.activo)
             setUltimoDespliegue({
                 ids: inicial.visibles,
-                motivo: 'la ruta abre por su punto de partida',
+                motivo: 'el lienzo abre por el final del juego',
             })
         },
         [catalogo.lessons, ruta],
@@ -160,7 +224,7 @@ export function useAcademy({ viewport = null } = {}) {
             if (!resultado.ids.length) {
                 setUltimoDespliegue({
                     ids: [],
-                    motivo: 'no hay mas continuaciones en el catalogo actual para este nodo',
+                    motivo: 'no hay más piezas que revelar alrededor de este nodo',
                 })
                 return { ...resultado, vacio: true }
             }
@@ -199,15 +263,340 @@ export function useAcademy({ viewport = null } = {}) {
         setGeneradas((prev) => fusionarGeneradas(prev, [lesson]))
     }, [])
 
+    /**
+     * LA ACCION DEL METODO: insertar una pieza nueva ANTES de otra.
+     *
+     * Crea la pieza, la enlaza como prerrequisito del padre y la deja visible de
+     * inmediato en el lienzo (acabas de crearla; obligar a pulsar "ver
+     * continuación" para verla no tendría sentido). La pieza nueva pasa a ser la
+     * activa, porque el paso siguiente del diseño es preguntar qué hace falta
+     * antes de ELLA.
+     */
+    const agregarAntesDe = useCallback(
+        (padreId, borrador) => {
+            const padre = catalogo.index.get(padreId)
+            const titulo = String(borrador?.title || '').trim()
+            if (!padre || !titulo) return null
+
+            const id = idDisponible(titulo, catalogo.index)
+            const pieza = {
+                id,
+                title: titulo,
+                subject: borrador.subject,
+                level: borrador.level,
+                durationMin: borrador.durationMin,
+                summary: String(borrador.summary || '').trim(),
+                objectives: [],
+                prereq: [],
+                unlocks: [],
+                tags: [],
+                skills: [],
+                content: borrador.content?.length
+                    ? borrador.content
+                    : [{ type: 'nota', text: 'Pieza añadida a mano: pendiente de desarrollar.' }],
+                origin: 'generado',
+            }
+
+            setGeneradas((prev) => fusionarGeneradas(prev, [pieza]))
+            setEnlaces((prev) => ({
+                ...prev,
+                [padreId]: [...new Set([...(prev[padreId] || []), id])],
+            }))
+            setVisibles((prev) => unir(prev, [id]))
+            setGrafoEdges((prev) =>
+                unirAristas(prev, [
+                    { id: `${id}->${padreId}:prereq`, from: id, to: padreId, kind: 'prereq' },
+                ]),
+            )
+            setActivo(id)
+            setUltimoDespliegue({
+                ids: [id],
+                motivo: `se añadió una pieza antes de «${padre.title}»`,
+            })
+            return { id, padre }
+        },
+        [catalogo.index],
+    )
+
     const reiniciarProgreso = useCallback(() => {
         setCompletadas([])
         setGeneradas([])
+        setEnlaces({})
+        setCatedralesPropias([])
+        setPremisa(null)
+        setElementos([])
+        setMaterial([])
+        setAnclajeActivo(null)
+        setPropuestas({})
         borrarTodo()
         resetGrafo()
         setRuta(null)
         setEstado('inicial')
         setPrompt('')
     }, [resetGrafo])
+
+    // --- La pregunta 0: en qué catedral se trabaja ---------------------------
+
+    /**
+     * Elige la catedral. Fija la premisa de todo el diseño: sin catedral no hay
+     * nada que diseñar, porque es ella la que decide qué misterios existen.
+     * El misterio se elige después (paso 2) y nace vacío a propósito.
+     */
+    const elegirCatedral = useCallback((catedralId) => {
+        setPremisa({ catedralId, misterioId: null, elegidaEn: new Date().toISOString() })
+    }, [])
+
+    /** Añade una catedral que no estaba en la lista del diseñador. */
+    const agregarCatedral = useCallback(
+        (nombre) => {
+            const limpio = String(nombre || '').trim()
+            if (!limpio) return null
+            const id = idDeCatedral(limpio, CATEDRALES, catedralesPropias)
+            setCatedralesPropias((prev) => [...prev, { id, nombre: limpio, misterios: [] }])
+            return id
+        },
+        [catedralesPropias],
+    )
+
+    /** Vuelve a la pregunta 0 sin borrar lo que ya se haya estudiado. */
+    const cambiarCatedral = useCallback(() => setPremisa(null), [])
+
+    // --- El material de la catedral elegida ----------------------------------
+
+    const elementosCatedral = useMemo(
+        () => elementosDe(elementos, premisa?.catedralId),
+        [elementos, premisa],
+    )
+
+    // --- El material de la catedral elegida ----------------------------------
+
+    const materialCatedral = useMemo(
+        () => materialDe(material, premisa?.catedralId),
+        [material, premisa],
+    )
+
+    /**
+     * LA INVESTIGACION PREVIA (el 80%).
+     *
+     * El disenador lo pidio asi: que la IA investigue a fondo que hay en la
+     * catedral —incluidos los apocrifos convincentes— para que el panel de nodos
+     * pueda sacar despues el 20% que falta.
+     *
+     * Lo que devuelve son CANDIDATOS: nada entra como documentado sin fuente, y
+     * el saneado degrada lo que se declare documentado sin ella.
+     */
+    const investigar = useCallback(
+        async (notas = '') => {
+            const catedralId = premisa?.catedralId
+            if (!catedralId) return null
+
+            setInvestigando(true)
+            setErrorInvestigacion(null)
+            try {
+                const r = await investigarCatedral({
+                    settings,
+                    catedral: catedralActiva,
+                    materialPrevio: materialCatedral,
+                    notas,
+                })
+                setMaterial((prev) => [
+                    ...prev.filter((o) => o.catedralId !== catedralId),
+                    ...r.opciones,
+                ])
+                setAvisoInvestigacion(r.aviso || '')
+                // ESTO NO ES UN ERROR. La investigacion ha funcionado: trajo
+                // material. Que viniera marcado como documentado y se haya
+                // quedado en «por verificar» es la regla aplicandose, no un
+                // fallo — y ensenarlo en rojo hacia creer lo contrario.
+                setResultadoInvestigacion(
+                    r.opciones.length
+                        ? `Investigación completada: ${r.opciones.length} opción(es) nuevas.${
+                              r.degradadas > 0
+                                  ? ` ${r.degradadas} venían marcadas como documentadas y quedaron «por verificar»: la IA propone y tú confirmas.`
+                                  : ''
+                          }`
+                        : 'La investigación no trajo ninguna opción válida.',
+                )
+                return r
+            } catch (err) {
+                setErrorInvestigacion(err?.message || 'La investigación no respondió.')
+                return null
+            } finally {
+                setInvestigando(false)
+            }
+        },
+        [premisa, settings, catedralActiva, materialCatedral],
+    )
+
+    /** Ver el grafo de un anclaje: se clasifica su titulo y se despliega el
+     * grafo, que abre por el final —el nucleo filosofico de ese anclaje—. */
+    const verGrafoDe = useCallback(
+        async (anclajeId) => {
+            const opcion = material.find((o) => o.id === anclajeId)
+            if (!opcion) return null
+            setAnclajeActivo(anclajeId)
+            const resultado = await clasificar(opcion.titulo)
+            if (resultado?.steps?.length) {
+                window.setTimeout(() => reproducir(resultado), 240)
+            }
+            return resultado
+        },
+        [clasificar, material, reproducir],
+    )
+
+    // --- La verificacion a mano ---------------------------------------------
+    //
+    // El disenador eligio: *«la IA propone y yo verifico a mano»*. Aqui se
+    // confirma opcion a opcion, y solo con fuente se pasa a `documentado`.
+
+    const cambiaOpcion = useCallback((id, transformar) => {
+        setMaterial((prev) => prev.map((o) => (o.id === id ? transformar(o) : o)))
+    }, [])
+
+    /** Documentar exige fuente: sin ella no se cambia nada y se devuelve el motivo. */
+    const documentarOpcion = useCallback(
+        (id, fuente) => {
+            const opcion = material.find((o) => o.id === id)
+            if (!opcion) return { ok: false, motivo: 'No encuentro esa opción.' }
+            const r = documentar(opcion, fuente)
+            if (r.ok) {
+                const final = r.opcion
+                setMaterial((prev) => prev.map((o) => (o.id === id ? final : o)))
+            }
+            return r
+        },
+        [material],
+    )
+
+    const desdocumentarOpcion = useCallback(
+        (id) => cambiaOpcion(id, desdocumentar),
+        [cambiaOpcion],
+    )
+    const descartarOpcion = useCallback((id) => cambiaOpcion(id, descartar), [cambiaOpcion])
+    const recuperarDescartadas = useCallback(() => {
+        setMaterial((prev) => prev.map((o) => (o.descartado ? recuperar(o) : o)))
+    }, [])
+
+    /**
+     * Añade un elemento al material de la catedral elegida.
+     *
+     * Un elemento REAL no entra sin fuente: es la regla del Grial aplicada al
+     * material. Lo que afirmamos tiene que poder sostenerse, y si no se sostiene
+     * se marca como inventado o modificado, que también es una decisión legítima.
+     */
+    const agregarElemento = useCallback(
+        (borrador) => {
+            const catedralId = premisa?.catedralId
+            if (!catedralId) return { ok: false, motivo: 'Falta elegir la catedral.' }
+
+            const nombre = String(borrador?.nombre || '').trim()
+            if (!nombre) return { ok: false, motivo: 'El elemento necesita un nombre.' }
+
+            const candidato = {
+                id: '',
+                catedralId,
+                tipo: borrador.tipo === 'modificable' ? 'modificable' : 'real',
+                categoria: borrador.categoria || 'otro',
+                textos: {
+                    [IDIOMA_BASE]: {
+                        nombre,
+                        detalle: String(borrador.detalle || '').trim(),
+                        fuente: String(borrador.fuente || '').trim(),
+                    },
+                },
+                origen: 'disenador',
+                anadidoEn: new Date().toISOString(),
+            }
+
+            if (faltaFuente(candidato)) {
+                return {
+                    ok: false,
+                    motivo: 'Un elemento real necesita fuente. Si no la tienes, márcalo como inventado o modificado.',
+                }
+            }
+
+            candidato.id = idDeElemento(nombre, elementos)
+            setElementos((prev) => [...prev, candidato])
+            return { ok: true, elemento: candidato }
+        },
+        [elementos, premisa],
+    )
+
+    const borrarElemento = useCallback((id) => {
+        setElementos((prev) => prev.filter((e) => e.id !== id))
+    }, [])
+
+    // --- El motor proponiendo misterios a partir del material ----------------
+
+    const propuestasCatedral = useMemo(
+        () => (premisa?.catedralId ? propuestas[premisa.catedralId] || null : null),
+        [propuestas, premisa],
+    )
+
+    /**
+     * Pide al motor misterios candidatos para la catedral elegida.
+     *
+     * El motor recibe el material con sus ids y tiene que decir cuáles lo
+     * sostienen; lo que se apoye en ids que no existen se descarta. Puede
+     * proponer, pero no puede inventarse el suelo que pisa.
+     */
+    const proponerMisterios = useCallback(async () => {
+        const catedralId = premisa?.catedralId
+        if (!catedralId) return null
+
+        setProponiendo(true)
+        setErrorMisterios(null)
+        try {
+            const r = await pedirMisterios({
+                settings,
+                catedral: catedralActiva,
+                elementos: elementosCatedral,
+            })
+            const entrada = {
+                candidatos: r.candidatos,
+                rechazados: r.rechazados,
+                idsInventados: r.idsInventados,
+                model: r.model,
+                generadoEn: new Date().toISOString(),
+            }
+            setPropuestas((prev) => ({ ...prev, [catedralId]: entrada }))
+            return entrada
+        } catch (err) {
+            setErrorMisterios(err?.message || 'El motor no respondió.')
+            return null
+        } finally {
+            setProponiendo(false)
+        }
+    }, [premisa, settings, catedralActiva, elementosCatedral])
+
+    /**
+     * El diseñador elige. El misterio elegido se guarda en su catedral y pasa a
+     * ser la premisa del gameflow: a partir de aquí ya se puede diseñar.
+     */
+    const elegirMisterio = useCallback(
+        (candidato) => {
+            const catedralId = premisa?.catedralId
+            if (!catedralId || !candidato?.valido) return null
+
+            const elegido = { ...candidato, elegidoEn: new Date().toISOString() }
+            const actual = catedrales.find((c) => c.id === catedralId)
+            const previos = actual?.misterios || []
+
+            if (!previos.some((m) => m.id === elegido.id)) {
+                setCatedralesPropias((prev) => [
+                    ...prev.filter((c) => c.id !== catedralId),
+                    {
+                        id: catedralId,
+                        nombre: actual?.nombre || '',
+                        misterios: [...previos, elegido],
+                    },
+                ])
+            }
+            setPremisa((prev) => ({ ...(prev || {}), catedralId, misterioId: elegido.id }))
+            return elegido
+        },
+        [catedrales, premisa],
+    )
 
     // --- Derivados para la UI -------------------------------------------------
 
@@ -300,8 +689,75 @@ export function useAcademy({ viewport = null } = {}) {
         // catalogo editable
         generadas,
         agregarLeccion,
+        agregarAntesDe,
+        enlaces,
         reiniciarProgreso,
+        // la premisa (pregunta 0)
+        catedrales,
+        catedralActiva,
+        premisa,
+        elegirCatedral,
+        agregarCatedral,
+        cambiarCatedral,
+        // el material
+        elementos,
+        elementosCatedral,
+        agregarElemento,
+        borrarElemento,
+        // el material de la catedral (la investigacion previa)
+        material,
+        materialCatedral,
+        investigar,
+        investigando,
+        errorInvestigacion,
+        avisoInvestigacion,
+        resultadoInvestigacion,
+        verGrafoDe,
+        anclajeActivo,
+        // la verificacion a mano
+        documentarOpcion,
+        desdocumentarOpcion,
+        descartarOpcion,
+        recuperarDescartadas,
+        // el misterio
+        propuestasCatedral,
+        proponerMisterios,
+        proponiendo,
+        errorMisterios,
+        elegirMisterio,
     }
+}
+
+/** Slug estable y libre a partir del nombre de un elemento. */
+function idDeElemento(nombre, existentes) {
+    const usados = new Set(existentes.map((e) => e.id))
+    const slug = normalizar(nombre).replace(/\s+/g, '-').slice(0, 40).replace(/^-+|-+$/g, '')
+    const raiz = `elem-${slug || 'elemento'}`
+    let id = raiz
+    let n = 2
+    while (usados.has(id)) id = `${raiz}-${n++}`
+    return id
+}
+
+/** Slug estable y libre a partir del nombre de una catedral añadida. */
+function idDeCatedral(nombre, base, propias) {
+    const usados = new Set([...base.map((c) => c.id), ...propias.map((c) => c.id)])
+    const slug = normalizar(nombre).replace(/\s+/g, '-').slice(0, 40).replace(/^-+|-+$/g, '')
+    const raiz = `cat-${slug || 'catedral'}`
+    let id = raiz
+    let n = 2
+    while (usados.has(id)) id = `${raiz}-${n++}`
+    return id
+}
+
+/** Slug estable y libre a partir del titulo de una pieza nueva. */
+function idDisponible(titulo, index) {
+    const slug = normalizar(titulo).replace(/\s+/g, '-').slice(0, 40).replace(/^-+|-+$/g, '')
+    const base = `gf-${slug || 'pieza'}`
+    let id = base
+    let n = 2
+    while (index.has(id)) id = `${base}-${n++}`
+    return id
 }
 
 function fusionar(parcial, base) {

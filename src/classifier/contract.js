@@ -1,6 +1,19 @@
 import { normalizar } from '../data/catalog.js'
 
-export const SUBJECT_KEYS = ['mate', 'codigo', 'fisica', 'datos', 'lengua']
+export const SUBJECT_KEYS = [
+    'premisa',
+    'arte',
+    'religion',
+    'ciencia',
+    'filosofia',
+    'umbra',
+    'anchor',
+    'red_herring',
+    'epigraphy',
+    'calambur',
+    'divergence',
+    'philosophical',
+]
 
 export const BLOCK_KINDS = ['markdown', 'formula', 'codigo', 'lista', 'nota', 'aviso', 'datos', 'quiz']
 
@@ -53,7 +66,7 @@ export function normalizeRoute(raw, prompt) {
 
 /** Palabras vacias del espanol: no aportan a la recuperacion. */
 const STOPWORDS = new Set(
-    `a al algo algunas algunos ante antes como con contra cual cuando de del desde donde dos el ella ellas ellos en entre era eres es esa esas ese eso esos esta estas este esto estos fue ha hasta la las le les lo los mas me mi mis mucho muy no nos o os otra otras otro otros para pero poco por porque que quien se segun ser si sin sobre son su sus te tiene todo todos tu tus un una unas uno unos y ya quiero queria necesito necesitaria aprender estudiame ensename dame hazme curso clase leccion lecciones tema sobre como`.split(
+    `a al algo algunas algunos ante antes como con contra cual cuando de del desde donde dos el ella ellas ellos en entre era eres es esa esas ese eso esos esta estas este esto estos fue ha hasta la las le les lo los mas me mi mis mucho muy no nos o os otra otras otro otros para pero poco por porque que quien se segun ser si sin sobre son su sus te tiene todo todos tu tus un una unas uno unos y ya quiero queria necesito necesitaria jugador jugadores sienta siento sientan descubra descubrir busca buscamos disenar diseno gameflow catedral catedrales pieza piezas nodo nodos`.split(
         /\s+/,
     ),
 )
@@ -203,4 +216,19 @@ export function pedagogicalSort(lessons) {
             a.prereq.length - b.prereq.length ||
             a.title.localeCompare(b.title, 'es'),
     )
+}
+
+/**
+ * ORDEN DE DISENO INVERSO.
+ *
+ * El orden pedagogico va de la base al objetivo, que es como se APRENDE. El
+ * diseno de un gameflow va al reves: primero se decide el final y despues se
+ * pregunta que hace falta antes, que es como se DISENA.
+ *
+ * Se apoya en `pedagogicalSort` (que ya garantiza que nada quede antes de sus
+ * propios prerrequisitos) y lo invierte, de modo que la ruta abre por el ancla
+ * y el despliegue progresivo va revelando sus prerrequisitos hacia atras.
+ */
+export function ordenDeDiseno(lessons) {
+    return pedagogicalSort(lessons).reverse()
 }

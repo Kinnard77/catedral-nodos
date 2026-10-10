@@ -1,7 +1,10 @@
 /**
- * Prueba end-to-end del flujo de la academia sobre Chrome headless (CDP).
- * Cubre: prompt -> clasificar -> Play -> ver continuacion -> leer leccion
- * -> marcar cursada -> persistencia.
+ * Prueba end-to-end del Gameflow de catedrales sobre Chrome headless (CDP).
+ *
+ * Cubre el flujo real de la herramienta, que ya no es «escribe que quieres que
+ * descubra el jugador»:
+ *
+ *   catedral -> material que YA existe en esa catedral -> grafo desde el final
  *
  * Uso: node scripts/e2e.mjs [url]
  */
@@ -111,16 +114,6 @@ try {
         return false
     }
 
-    // Utilidades de interaccion
-    const escribirPrompt = (texto) => `(() => {
-        const area = document.getElementById('prompt-academia');
-        if (!area) return false;
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-        setter.call(area, ${JSON.stringify(texto)});
-        area.dispatchEvent(new Event('input', { bubbles: true }));
-        return true;
-    })()`
-
     const clicPorTexto = (texto, ambito = 'document') => `(() => {
         const raiz = ${ambito};
         const nodos = [...raiz.querySelectorAll('button')];
@@ -130,154 +123,402 @@ try {
         return true;
     })()`
 
-    const contar = (selector) => `document.querySelectorAll(${JSON.stringify(selector)}).length`
+    const texto = async () => (await evaluar('document.body.innerText')).toLowerCase()
 
-    // --- 1. Carga inicial ---------------------------------------------------
-    console.log('\n1. Carga de la academia')
+    const escribirEn = (id, valor, etiqueta = 'input') => `(() => {
+        const campo = document.getElementById(${JSON.stringify(id)});
+        if (!campo) return false;
+        const proto = ${
+            etiqueta === 'input' ? 'window.HTMLInputElement' : 'window.HTMLTextAreaElement'
+        }.prototype;
+        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+        setter.call(campo, ${JSON.stringify(valor)});
+        campo.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    })()`
+
+    // --- 1. El lienzo abre con la pregunta 0 ---------------------------------
+    console.log('\n1. El lienzo abre preguntando la catedral')
     await enviar('Page.navigate', { url: URL_APP }, sessionId)
-    await esperarA('!!document.querySelector("#prompt-academia")', { descripcion: 'textarea del prompt' })
-    ok(await evaluar('!!document.querySelector("#prompt-academia")'), 'la caja de prompt existe')
-    const catalogoTexto = await evaluar('document.body.innerText.includes("28")')
-    ok(catalogoTexto, 'el panel muestra el tamaño del catálogo (28 lecciones)')
-    ok((await evaluar('document.body.innerText')).includes('Escribe qué quieres aprender'), 'el lienzo arranca vacío con instrucciones')
-
-    // --- 2. Clasificar ------------------------------------------------------
-    console.log('\n2. Clasificar "Quiero aprender el teorema de Pitágoras"')
-    ok(await evaluar(escribirPrompt('Quiero aprender el teorema de Pitágoras')), 'se escribió el prompt')
-    ok(await evaluar(clicPorTexto('Clasificar lecciones')), 'se pulsó "Clasificar lecciones"')
-    const hayRuta = await esperarA('document.body.innerText.includes("Play ruta")', {
-        descripcion: 'la ruta clasificada',
+    await esperarA('!!document.querySelector("[data-catedral]")', {
+        descripcion: 'el selector de catedral',
     })
-    ok(hayRuta, 'el clasificador devolvió una ruta')
-    const panelRuta = await evaluar(
-        `document.querySelector('[data-panel="ruta"]')?.innerText || ''`,
+    ok(
+        (await texto()).includes('¿en qué catedral vamos a trabajar?'),
+        'la primera pregunta del lienzo es en qué catedral se trabaja',
     )
-    // El CSS aplica text-transform: uppercase, asi que se compara en minusculas.
-    const panelMin = panelRuta.toLowerCase()
-    const tieneSecuencia = panelMin.includes('secuencia')
-    ok(tieneSecuencia, 'la ruta muestra la secuencia de pasos')
-    if (!tieneSecuencia) {
-        console.log('  (texto real del panel de ruta:)')
-        console.log(
-            panelRuta
-                .split('\n')
-                .slice(0, 40)
-                .map((l) => `       ${l}`)
-                .join('\n'),
+    const cuantas = await evaluar(`document.querySelectorAll('[data-catedral]').length`)
+    ok(cuantas >= 8, `ofrece las catedrales del diseñador (${cuantas})`)
+    for (const nombre of ['sevilla', 'valencia', 'burgos', 'chartres']) {
+        ok(
+            await evaluar(`!!document.querySelector('[data-catedral="${nombre}"]')`),
+            `está la Catedral de ${nombre}`,
         )
     }
-    ok(panelMin.includes('pitágoras') || panelMin.includes('pitagoras'), 'la ruta menciona el objetivo')
+
+    // --- 2. Sin catedral no hay material que enseñar -------------------------
+    console.log('\n2. Sin catedral el panel no finge')
     ok(
-        panelMin.includes('fundamento') || panelMin.includes('núcleo') || panelMin.includes('práctica'),
-        'la ruta explica el papel de cada nodo (rol)',
+        !(await evaluar(clicPorTexto('Cerrar'))),
+        'la pregunta no se puede cerrar mientras no haya catedral',
     )
-    const pasos = await evaluar(
-        `[...document.querySelectorAll('ol li')].filter(li => li.innerText.match(/^\\d/)).length`,
+    ok(
+        (await texto()).includes('elige la catedral en el lienzo'),
+        'el panel pide la catedral en vez de preguntar qué queremos que descubra el jugador',
     )
-    ok(pasos >= 3, `la secuencia tiene al menos 3 pasos (${pasos})`)
+    ok(
+        !(await texto()).includes('¿qué quieres que descubra'),
+        'ya NO se le pregunta al diseñador qué debe descubrir el jugador: eso lo resuelve el grafo',
+    )
+    ok(
+        !(await evaluar(`!!document.getElementById('material-notas')`)),
+        'sin catedral no hay ni caja de investigación',
+    )
 
-    // --- 3. Play: el grafo se despliega solo --------------------------------
-    console.log('\n3. Play despliega el grafo')
-    await esperar(1200) // el Play es automático tras clasificar
-    const nodosGrafo = () => `document.querySelectorAll('[data-node-id]').length`
-    const nodosIniciales = await evaluar(nodosGrafo())
-    const conexionesIniciales = await evaluar(contar('svg path.conexion'))
-    const tarjetaActiva = await evaluar('document.body.innerText.includes("Ver continuación")')
-    ok(tarjetaActiva, 'aparece la tarjeta del nodo activo con "Ver continuación"')
-    ok(nodosIniciales >= 1, `el grafo abre con ${nodosIniciales} nodo(s), no con toda la ruta`)
-    ok(nodosIniciales < pasos, `no despliega la ruta completa de una vez (${nodosIniciales} < ${pasos})`)
-    console.log(`  (conexiones SVG: ${conexionesIniciales})`)
-    ok(conexionesIniciales >= 0, 'la capa de conexiones SVG existe')
-
-    // --- 4. Ver continuación ------------------------------------------------
-    console.log('\n4. "Ver continuación" agrega nodos')
-    const antes = await evaluar(nodosGrafo())
+    // --- 3. Elegir la catedral: aparece SU material --------------------------
+    console.log('\n3. Al elegir catedral salen las opciones que ya existen en ella')
     ok(
         await evaluar(`(() => {
-            const b = document.querySelector('[data-accion="continuar"]');
+            const b = document.querySelector('[data-catedral="valencia"]');
             if (!b) return false;
             b.click();
             return true;
         })()`),
-        'se pulsó "Ver continuación"',
+        'se eligió la Catedral de Valencia',
     )
-    await esperar(900)
-    const despues = await evaluar(nodosGrafo())
-    const conexionesDespues = await evaluar(contar('svg path.conexion'))
-    ok(despues > antes, `el grafo creció: ${antes} -> ${despues} nodos`)
-    ok(
-        conexionesDespues > conexionesIniciales,
-        `se dibujaron nuevas conexiones: ${conexionesIniciales} -> ${conexionesDespues}`,
-    )
-    const motivo = await evaluar(
-        `(document.body.innerText.match(/\\+\\d+ nodo\\(s\\)[^\\n]*/) || [''])[0]`,
-    )
-    ok(motivo.length > 0, `se reporta el motivo del despliegue ("${motivo}")`)
-    const nuevasMarcadas = await evaluar(
-        `[...document.querySelectorAll('[data-node-nueva="si"]')].map(n => n.dataset.nodeId).join(',')`,
-    )
-    ok(nuevasMarcadas.length > 0, `los nodos nuevos quedan identificados: ${nuevasMarcadas}`)
-
-    // --- 5. Leer la lección -------------------------------------------------
-    console.log('\n5. Leer la lección activa')
-    const tituloActivo = await evaluar(
-        `document.querySelector('[data-node-state="activo"]')?.dataset.nodeId || ''`,
-    )
-    console.log(`  (lección activa: ${tituloActivo})`)
-    ok(await evaluar(clicPorTexto('Estudiar lección')), 'se pulsó "Estudiar lección"')
-    const lectorAbierto = await esperarA('document.querySelectorAll(".katex").length > 0', {
-        descripcion: 'el lector con contenido renderizado',
+    await esperarA('!!document.querySelector("[data-opcion]")', {
+        descripcion: 'el material de Valencia',
     })
-    ok(lectorAbierto, 'el lector de lección se abrió y renderizó contenido')
-    const prosa = await evaluar(`document.querySelectorAll('.prosa').length`)
-    ok(prosa > 0, `el contenido se renderiza como prosa (${prosa} bloques)`)
-    const katex = await evaluar(`document.querySelectorAll('.katex').length`)
-    ok(katex > 0, `KaTeX renderizó ${katex} expresiones matemáticas`)
-    const bloques = await evaluar(`document.querySelectorAll('pre code').length`)
-    console.log(`  (bloques de código: ${bloques})`)
-    ok(await evaluar('document.body.innerText.includes("Ver continuación")'), 'el lector ofrece "ver continuación" al pie')
-
-    // --- 6. Continuar desde el lector --------------------------------------
-    console.log('\n6. Continuar desde el lector')
-    const nodosAntesLector = await evaluar(nodosGrafo())
-    // Ambito acotado al lector: la tarjeta del nodo detras tiene su propio
-    // boton "Ver continuación" y hay que pulsar el del lector.
+    const opciones = await evaluar(`document.querySelectorAll('[data-opcion]').length`)
+    ok(opciones === 0, `el panel arranca VACIO, sin material de ejemplo (${opciones})`)
     ok(
-        await evaluar(clicPorTexto('Ver continuación', 'document.querySelector(".fixed.z-40")')),
-        'se pulsó "Ver continuación" dentro del lector',
+        (await texto()).includes('todavía no hay'),
+        'y lo dice: primero qué tenemos, después qué misterio inducimos',
     )
-    const lectorCerrado = await esperarA('document.querySelectorAll(".prosa").length === 0', {
-        descripcion: 'el lector se cierra',
-    })
-    ok(lectorCerrado, 'el lector se cierra al continuar')
-    await esperar(1400)
-    const nodosTrasLector = await evaluar(nodosGrafo())
     ok(
-        nodosTrasLector >= nodosAntesLector,
-        `el grafo siguió desplegándose tras leer (${nodosAntesLector} -> ${nodosTrasLector})`,
+        await evaluar(`!!document.querySelector('[data-accion="investigar"]')`),
+        'y ofrece investigar la catedral',
     )
-    const cursadas = await evaluar(
-        `JSON.parse(localStorage.getItem('academia:v1:progreso') || '[]').length`,
+    ok(
+        await evaluar(`!!document.getElementById('material-notas')`),
+        'y ya se puede encargar la investigación',
     )
-    ok(cursadas > 0, `la lección leída quedó marcada como cursada (${cursadas})`)
 
-    // --- 7. Persistencia ----------------------------------------------------
-    console.log('\n7. Persistencia en localStorage')
-    const claves = await evaluar(`Object.keys(localStorage).filter(k => k.startsWith('academia:')).length`)
-    ok(claves > 0, `se guardaron ${claves} clave(s) de la academia`)
-    const progreso = await evaluar(`localStorage.getItem('academia:v1:progreso') || ''`)
-    ok(progreso.length > 2, `el progreso quedó guardado (${progreso})`)
-
+    // --- 4. Ver el detalle de un anclaje -------------------------------------
+    // Material de prueba inyectado: los pasos siguientes comprueban el detalle,
+    // la verificacion a mano y el grafo, y necesitan un anclaje. Antes venia
+    // sembrado en el codigo; ahora se pone aqui, que es donde tiene que estar.
+    await evaluar(`(() => {
+        const o = (id, extra) => Object.assign({
+            id, catedralId: 'valencia', clase: 'anclaje', pilar: 'anclaje_visible',
+            titulo: 'Losa de prueba ' + id, detalle: 'Con el punto medial descentrado entre las palabras 3 y 4.',
+            ubicacion: 'Girola', juego: '', fuente: '', estado: 'por_verificar',
+            fuenteConsultada: false, fuenteSospechosa: false, degradado: false,
+            motivoDegradado: '', valido: true, ejemplo: false,
+        }, extra || {});
+        localStorage.setItem('gameflow:v1:material', JSON.stringify([
+            o('ANC-01', { ejemplo: true }),
+            o('EPI-01', { clase: 'epigrafia', pilar: 'apocrifo' }),
+            o('DC-01', { clase: 'dato_curioso', pilar: 'dualidad_gremios' }),
+            o('FIL-01', { clase: 'dato_curioso', pilar: 'secreto_filosofico' }),
+        ]));
+        return true;
+    })()`)
     await enviar('Page.navigate', { url: URL_APP }, sessionId)
-    await esperarA('!!document.querySelector("#prompt-academia")', { descripcion: 'recarga' })
-    await esperar(1000)
-    const cursadasTrasRecarga = await evaluar(
-        `JSON.parse(localStorage.getItem('academia:v1:progreso') || '[]').length`,
-    )
-    ok(cursadasTrasRecarga > 0, `el progreso sobrevive la recarga (${cursadasTrasRecarga} lección(es))`)
+    await esperarA('!!document.querySelector("[data-opcion=\\"ANC-01\\"]")', {
+        descripcion: 'el material de prueba',
+    })
+    await esperar(700)
 
-    // --- 8. Consola limpia --------------------------------------------------
-    console.log('\n8. Consola del navegador')
+    ok(
+        (await texto()).includes('anclaje en lo visible') &&
+            (await texto()).includes('apócrifo convincente') &&
+            (await texto()).includes('dualidad de gremios') &&
+            (await texto()).includes('secreto sin magia'),
+        'y salen agrupadas por los cuatro pilares',
+    )
+    ok(
+        (await texto()).includes('por verificar'),
+        'cada opción declara su estado: el ejemplo del §4 aún no tiene fuente',
+    )
+    ok(
+        !(await texto()).includes('documentado\n'),
+        'ninguna se da por documentada sin fuente',
+    )
+
+    console.log('\n4. El detalle de un anclaje')
+    ok(
+        await evaluar(`(() => {
+            const b = document.querySelector('[data-opcion="ANC-01"] button');
+            if (!b) return false;
+            b.click();
+            return true;
+        })()`),
+        'se abre el anclaje ANC-01',
+    )
+    await esperar(400)
+    ok(
+        (await texto()).includes('punto medial'),
+        'el detalle dice cuál es la anomalía visible',
+    )
+    ok(
+        await evaluar(`!!document.querySelector('[data-ver-grafo="ANC-01"]')`),
+        'y ofrece ver el grafo de ese anclaje',
+    )
+
+    // --- 4b. La verificación a mano ------------------------------------------
+    console.log('\n4b. La verificación a mano: sin fuente no se documenta')
+    ok(
+        await evaluar(`(() => {
+            const b = document.querySelector('[data-opcion="ANC-01"] [data-accion="documentar"]');
+            return !!b && b.disabled;
+        })()`),
+        'sin fuente el botón está cerrado: la regla es una puerta, no un aviso',
+    )
+    await evaluar(escribirEn('fuente-ANC-01', 'Libro de fábrica, fol. 42', 'input'))
+    await esperar(400)
+    ok(
+        await evaluar(`(() => {
+            const b = document.querySelector('[data-opcion="ANC-01"] [data-accion="documentar"]');
+            return !!b && !b.disabled;
+        })()`),
+        'al anotar la fuente se abre',
+    )
+    await evaluar(`document.querySelector('[data-opcion="ANC-01"] [data-accion="documentar"]')?.click()`)
+    await esperar(600)
+    ok(
+        (await texto()).includes('documentada · fuente: libro de fábrica'),
+        'y la opción queda documentada con su fuente',
+    )
+    ok((await evaluar('document.body.innerText')).includes('1 doc'), 'el contador lo refleja')
+    await evaluar(
+        `document.querySelector('[data-opcion="ANC-01"] [data-accion="desdocumentar"]')?.click()`,
+    )
+    await esperar(500)
+    ok((await texto()).includes('por verificar'), 'quitando la fuente vuelve a «por verificar»')
+
+    // Descartar no borra: marca, y se puede recuperar.
+    await evaluar(`document.querySelector('[data-descartar="ANC-01"]')?.click()`)
+    await esperar(500)
+    ok(
+        !(await evaluar(`!!document.querySelector('[data-opcion="ANC-01"]')`)),
+        'lo descartado desaparece de los pilares',
+    )
+    ok(
+        await evaluar(`!!document.querySelector('[data-accion="recuperar"]')`),
+        'pero no se borra: se puede recuperar',
+    )
+    await evaluar(`document.querySelector('[data-accion="recuperar"]')?.click()`)
+    await esperar(500)
+    ok(await evaluar(`!!document.querySelector('[data-opcion="ANC-01"]')`), 'y vuelve')
+
+    // --- 5. Investigar sin clave lo dice -------------------------------------
+    console.log('\n5. La investigación previa: sin clave lo dice')
+    await evaluar(`document.querySelector('[data-accion="investigar"]')?.click()`)
+    await esperar(900)
+    ok(
+        (await texto()).includes('falta la clave del motor'),
+        'sin clave no finge que investiga: lo dice',
+    )
+
+    // --- 6. El grafo del anclaje, desde el final -----------------------------
+    console.log('\n6. El grafo del GN-IEC se despliega desde el final')
+    // La tarjeta se replegó al descartarla y recuperarla: se abre otra vez.
+    await evaluar(`document.querySelector('[data-opcion="ANC-01"] button')?.click()`)
+    await esperar(500)
+    ok(
+        await evaluar(`(() => {
+            const b = document.querySelector('[data-ver-grafo="ANC-01"]');
+            if (!b || b.disabled) return false;
+            b.click();
+            return true;
+        })()`),
+        'se pide el grafo de ese anclaje',
+    )
+    ok(
+        await esperarA(
+            `document.body.innerText.includes('El no-ser') &&
+             document.querySelectorAll('[data-node-id]').length === 1`,
+            { descripcion: 'el núcleo filosófico en el lienzo' },
+        ),
+        'el grafo abre por el FINAL: la herejía, no la piedra',
+    )
+    await evaluar(`document.querySelector('[data-accion="continuar"]')?.click()`)
+    await esperar(1200)
+    ok(
+        await evaluar(`!!document.querySelector('[data-node-id="DIV-01"]')`),
+        'el primer clic revela la divergencia historiador / lingüista',
+    )
+    const etiquetas = await evaluar(
+        `[...document.querySelectorAll('svg text')].map(t => t.textContent).join(' | ')`,
+    )
+    ok(
+        etiquetas.includes('dialectic_breakthrough'),
+        `las aristas llevan las salidas del GN-IEC (${etiquetas.slice(0, 80)}…)`,
+    )
+
+    // --- 7. Añadir una catedral: el material no se mezcla --------------------
+    console.log('\n7. El material no se mezcla entre catedrales')
+    ok(await evaluar(clicPorTexto('Catedral de Valencia')), 'se reabre la pregunta 0')
+    await esperarA('!!document.querySelector("#catedral-nueva")', { descripcion: 'el campo de alta' })
+    await evaluar(escribirEn('catedral-nueva', 'Catedral de Toledo', 'input'))
+    await esperar(300)
+    await evaluar(`document.querySelector('[data-accion="agregar-catedral"]')?.click()`)
+    await esperar(900)
+    ok(
+        (await evaluar('document.body.innerText')).includes('Catedral de Toledo'),
+        'Toledo queda como premisa',
+    )
+    ok(
+        (await evaluar(`document.querySelectorAll('[data-opcion]').length`)) === 0,
+        'y no hereda el material de Valencia',
+    )
+    ok(
+        (await texto()).includes('todavía no hay'),
+        'sino que dice que todavía no hay material sobre la mesa',
+    )
+
+    // --- 8. Persistencia ----------------------------------------------------
+    console.log('\n8. La premisa y el material sobreviven la recarga')
+    const guardado = await evaluar(`localStorage.getItem('gameflow:v1:material') || ''`)
+    ok(
+        guardado.includes('ANC-01') && guardado.includes('"catedralId":"valencia"'),
+        'el material quedó guardado y atado a su catedral',
+    )
+    await enviar('Page.navigate', { url: URL_APP }, sessionId)
+    await esperarA('!!document.querySelector("[data-accion=\\"catedral\\"]")', { descripcion: 'la barra' })
+    await esperar(900)
+    ok(
+        !(await evaluar(`!!document.querySelector('[data-catedral]')`)),
+        'tras recargar no vuelve a preguntar: la premisa está fijada',
+    )
+    ok(
+        (await evaluar('document.body.innerText')).includes('Catedral de Toledo'),
+        'la catedral elegida sobrevive la recarga',
+    )
+
+    // --- 9. Conectar una IA: Google AI Studio y Kimi K3 ----------------------
+    console.log('\n9. Ajustes del motor: Google AI Studio (API nativa) y Kimi K3')
+    ok(await evaluar(clicPorTexto('Ajustes')), 'se abren los Ajustes')
+    await esperarA('!!document.querySelector(\'[data-accion="probar-motor"]\')', {
+        descripcion: 'el panel del motor',
+    })
+    ok(await evaluar(clicPorTexto('Google AI Studio')), 'se elige el preset de Google AI Studio')
+    await esperar(600)
+    ok(
+        (await texto()).includes('api nativa de gemini'),
+        'dice que va por la API nativa, no por la capa compatible con OpenAI',
+    )
+    ok(
+        (await texto()).includes('no hay base url'),
+        'y que no hay Base URL que configurar: la dirección es de Google',
+    )
+    ok(
+        !(await evaluar(
+            `[...document.querySelectorAll('input')].some(i => i.value.toLowerCase().includes('openai'))`,
+        )),
+        'no queda ninguna URL de OpenAI de por medio',
+    )
+    ok(
+        (await texto()).includes('no hay que elegir modelo'),
+        'y avisa de que NO hay que elegir modelo: la herramienta usa el que tu clave tenga',
+    )
+    ok(
+        !(await evaluar(
+            `[...document.querySelectorAll('input')].some(i => (i.value || '').startsWith('gemini'))`,
+        )),
+        'no hay ningún campo de modelo antes de conectar',
+    )
+    ok(
+        !(await evaluar(`!!document.getElementById('modelo-general')`)),
+        'ni selector de modelo: solo la clave',
+    )
+    ok(
+        (await evaluar(`document.querySelector('[data-accion="probar-motor"]')?.innerText`)) ===
+            'Conectar',
+        'el botón dice Conectar y nada más',
+    )
+    ok(
+        (await texto()).includes('busca en google'),
+        'y avisa de que esta API sí busca y cita las fuentes que consulta',
+    )
+    ok(
+        await evaluar(`document.querySelector('[data-accion="probar-motor"]').disabled`),
+        'sin clave, el botón de probar está cerrado',
+    )
+
+    ok(await evaluar(clicPorTexto('Moonshot')), 'se puede cambiar a Moonshot')
+    await esperar(600)
+    ok(
+        await evaluar(
+            `[...document.querySelectorAll('input')].some(i => i.value === 'https://api.moonshot.ai/v1')`,
+        ),
+        'y trae el endpoint real de Moonshot',
+    )
+    ok(
+        await evaluar(`[...document.querySelectorAll('input')].some(i => i.value === 'kimi-k3')`),
+        'y el modelo kimi-k3',
+    )
+
+    // --- 9b. Conectar de verdad, con la red simulada ------------------------
+    console.log('\n9b. Conectar: el mensaje de éxito no se autodestruye')
+    ok(await evaluar(clicPorTexto('Google AI Studio')), 'se vuelve al preset de Google')
+    await esperar(600)
+    // La red se simula DENTRO del navegador: asi se prueba el flujo entero sin
+    // gastar una peticion real y sin necesitar una clave de verdad.
+    await evaluar(`(() => {
+        window.__fetchReal = window.fetch;
+        window.fetch = async (url) => {
+            const u = String(url);
+            if (u.includes('/models?')) {
+                return new Response(JSON.stringify({ models: [
+                    { name: 'models/gemini-3.8-flash', supportedGenerationMethods: ['generateContent'] },
+                ] }), { status: 200 });
+            }
+            return new Response(JSON.stringify({ status: 'completed', steps: [
+                { type: 'model_output', content: [{ type: 'text', text: 'ok' }] },
+            ] }), { status: 200 });
+        };
+        return true;
+    })()`)
+    ok(
+        await evaluar(`(() => {
+            const campo = document.querySelector('input[type="password"]');
+            if (!campo) return false;
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            setter.call(campo, 'AQ.claveDePrueba');
+            campo.dispatchEvent(new Event('input', { bubbles: true }));
+            return true;
+        })()`),
+        'se escribe una clave (simulada)',
+    )
+    await esperar(400)
+    await evaluar(`document.querySelector('[data-accion="probar-motor"]')?.click()`)
+    ok(
+        await esperarA('!!document.querySelector(\'[data-resultado-prueba="ok"]\')', {
+            descripcion: 'el resultado de la conexion',
+        }),
+        'conectar da un resultado visible',
+    )
+    ok((await texto()).includes('conectado'), 'y dice claramente que ha conectado')
+
+    // LA REGRESION, que es el fallo que se vio en pantalla: guardar los ajustes
+    // al conectar cambiaba `settings` y borraba el mensaje en el acto.
+    await esperar(1500)
+    ok(
+        await evaluar(`!!document.querySelector('[data-resultado-prueba="ok"]')`),
+        'y el mensaje SIGUE ahí: guardar los ajustes ya no lo borra',
+    )
+    ok(
+        (await evaluar(
+            `(JSON.parse(localStorage.getItem('gameflow:v1:settings') || '{}').llm || {}).apiKey`,
+        )) === 'AQ.claveDePrueba',
+        'y la clave quedó guardada sola, sin pulsar Guardar',
+    )
+    await evaluar(`(() => { window.fetch = window.__fetchReal; return true })()`)
+
+    // --- 10. Consola limpia -------------------------------------------------
+    console.log('\n10. Consola del navegador')
     const erroresReales = consola.filter(
         (linea) => !linea.includes('favicon') && !linea.includes('Download the React DevTools'),
     )

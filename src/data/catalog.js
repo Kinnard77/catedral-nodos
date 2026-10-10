@@ -1,17 +1,40 @@
-import { mathLessons } from './lessons/matematicas.js'
-import { codeLessons } from './lessons/programacion.js'
-import { physicsLessons } from './lessons/fisica.js'
-import { dataLessons } from './lessons/datos.js'
-import { languageLessons } from './lessons/lengua.js'
+import { gniecEjemplo } from './gameflow/gniec-ejemplo.js'
 
-/** Catalogo semilla que se envia al clasificador cuando no hay nada generado todavia. */
-export const SEED_LESSONS = [
-    ...mathLessons,
-    ...codeLessons,
-    ...physicsLessons,
-    ...dataLessons,
-    ...languageLessons,
-]
+/**
+ * Catalogo semilla: el grafo del GN-IEC —la especificacion del disenador—
+ * dibujable. El ancla (`ancla: true`) es el NUCLEO FILOSOFICO, o sea la
+ * herejia: se empieza por el final y se camina hacia atras hasta la piedra que
+ * el turista mira.
+ *
+ * Semillas anteriores, retiradas y NO borradas:
+ *  - `gameflow/umbra-gdd.js`     el grafo del GDD (4 rutas + metapuzzle)
+ *  - `gameflow/catedral-dolores.js`  invencion del agente, sin valor
+ */
+export const SEED_LESSONS = [...gniecEjemplo]
+
+/** El nodo raiz del diseno inverso: el final desde el que se trabaja hacia atras. */
+export function findAncla(lessons) {
+    return lessons.find((l) => l.ancla) || null
+}
+
+/**
+ * Aplica los enlaces de diseno añadidos a mano.
+ *
+ * El diseño inverso consiste en insertar piezas NUEVAS antes de las que ya
+ * existen. Como la semilla es un modulo inmutable, esos enlaces se guardan
+ * aparte (`{ idDelPadre: [idsQueHacenFaltaAntes] }`) y aqui se cosen al
+ * catalogo: el padre recibe esos ids como prerrequisitos y el motor, que solo
+ * lee `prereq`, los revela hacia atras sin saber que son añadidos.
+ */
+export function aplicarEnlaces(lessons, enlaces = {}) {
+    const ids = new Set(lessons.map((l) => l.id))
+    return lessons.map((lesson) => {
+        const extra = (enlaces[lesson.id] || []).filter((id) => ids.has(id) && id !== lesson.id)
+        if (!extra.length) return lesson
+        const unicos = [...new Set([...lesson.prereq, ...extra])]
+        return unicos.length === lesson.prereq.length ? lesson : { ...lesson, prereq: unicos }
+    })
+}
 
 /** Une semilla y lecciones generadas sin duplicar IDs (lo generado gana). */
 export function mergeLessons(seed, generated = []) {
@@ -53,11 +76,17 @@ export function buildEdges(lessons) {
     return edges
 }
 
-/** Materias presentes en el catalogo, con conteo de lecciones. */
+/**
+ * Tipos presentes en el catalogo, con conteo de nodos.
+ *
+ * Agrupa por la CLASE efectiva del nodo: si trae `tipo` (GN-IEC) manda esa,
+ * porque es mas especifica que el tema. Si no, cae al `subject` (la Columna).
+ */
 export function subjectBreakdown(lessons) {
     const counts = new Map()
     for (const lesson of lessons) {
-        counts.set(lesson.subject, (counts.get(lesson.subject) || 0) + 1)
+        const clave = lesson.tipo || lesson.subject
+        counts.set(clave, (counts.get(clave) || 0) + 1)
     }
     return [...counts.entries()].map(([subject, count]) => ({ subject, count }))
 }

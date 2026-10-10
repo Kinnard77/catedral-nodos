@@ -39,17 +39,18 @@ export function pendientesDe(lessonId, visibles, index) {
 }
 
 /**
- * DESPLIEGUE PROGRESIVO.
+ * DESPLIEGUE PROGRESIVO (diseño inverso).
  *
- * Cada clic en "ver continuacion" revela un lote de nodos alrededor de la
- * leccion activa. El lote depende del estado del grafo:
+ * Cada clic en "ver continuación" revela un lote de nodos alrededor de la
+ * pieza activa. El lote depende del estado del grafo:
  *
  *  - Si la base del nodo aun no se mostro, entra primero lo que hay que
- *    dominar antes (sus prerrequisitos).
- *  - Si ya se mostro la base, avanza la continuacion: primero el siguiente
- *    paso de la ruta planeada y ademas una continuacion natural del catalogo.
- *  - Si la ruta ya termino o el siguiente paso estaba visible, revela lo que
- *    sigue despues del ultimo nodo visible de la ruta.
+ *    resolver ANTES (sus prerrequisitos). Esta es la rama que hace el diseño
+ *    inverso: se empieza por el final y se camina hacia atrás.
+ *  - Si ya se mostro la base, avanza hacia el siguiente paso del gameflow
+ *    planeado y además una pieza conectada del catálogo.
+ *  - Si el gameflow ya terminó o el siguiente paso estaba visible, revela lo
+ *    que sigue después del último nodo visible.
  *
  * Devuelve los nodos y aristas que deben agregarse, mas un motivo legible.
  */
@@ -73,27 +74,28 @@ export function desplegar({
     const basePendiente = obtenerNuevas(lesson, vistas, index).filter((c) => c.kind === 'prereq')
 
     if (!yaMostroBase && basePendiente.length) {
-        // Paso 1: lo que hay que dominar antes de este nodo.
+        // Paso 1: lo que hay que resolver antes de este nodo.
         for (const c of basePendiente) agregar.set(c.lesson.id, c)
-        motivo = 'se agregó la base necesaria para entender este nodo'
+        motivo = 'se reveló lo que hace falta antes de este nodo'
     } else {
-        // Paso 2: la continuacion. Primero el siguiente paso de la ruta planeada.
+        // Paso 2: la continuacion. Primero el siguiente paso de la ruta planeada,
+        // pero solo si de verdad es vecino declarado de este nodo: si no, se
+        // dibujaria una conexion que el disenador nunca declaro.
         const posicion = ruta.indexOf(lessonId)
         const siguienteId = posicion >= 0 ? ruta[posicion + 1] : null
         const siguiente = siguienteId ? index.get(siguienteId) : null
+        const vecinos = new Set([...lesson.prereq, ...lesson.unlocks])
 
-        if (siguiente && !vistas.has(siguiente.id)) {
+        if (siguiente && vecinos.has(siguiente.id) && !vistas.has(siguiente.id)) {
             agregar.set(siguiente.id, { lesson: siguiente, kind: 'ruta' })
-            motivo = 'se agregó el siguiente paso de la ruta'
+            motivo = 'se reveló la pieza siguiente del gameflow'
         }
 
         // Ademas, una continuacion natural declarada por el catalogo.
         const continuacion = obtenerNuevas(lesson, vistas, index).find((c) => c.kind === 'sugerido')
         if (continuacion && !agregar.has(continuacion.lesson.id)) {
             agregar.set(continuacion.lesson.id, continuacion)
-            motivo = motivo
-                ? `${motivo} y una continuación del catálogo`
-                : 'se agregó una continuación del catálogo'
+            motivo = motivo ? `${motivo} y una pieza conectada` : 'se reveló una pieza conectada'
         }
 
         // Si la ruta ya termino o el siguiente paso estaba visible, se revela
@@ -104,7 +106,7 @@ export function desplegar({
             if (nodo) {
                 const mas = obtenerNuevas(nodo, vistas, index).filter((c) => c.kind === 'sugerido')
                 for (const c of mas.slice(0, 2)) agregar.set(c.lesson.id, c)
-                if (agregar.size) motivo = 'la ruta llegó al final: se abre la continuación disponible'
+                if (agregar.size) motivo = 'el gameflow llegó al final: se abre la pieza conectada'
             }
         }
     }
@@ -128,8 +130,15 @@ export function desplegar({
     }
 }
 
-/** Estado inicial: la ruta completa queda en cola, visible solo el primer paso. */
-export function inicializarGrafo(steps, index) {
+/**
+ * Estado inicial del lienzo.
+ *
+ * En diseño inverso el lienzo abre SOLO con el final (`conBase: false`): el
+ * ancla aparece sola y el jugador de diseño decide qué revelar hacia atrás.
+ * Con `conBase: true` se recupera el comportamiento anterior, que además
+ * mostraba de golpe los prerrequisitos del primer nodo.
+ */
+export function inicializarGrafo(steps, index, { conBase = false } = {}) {
     const ruta = steps.map((s) => s.lessonId).filter((id) => index.has(id))
     if (!ruta.length) {
         return { visibles: [], contadores: {}, edges: [], ruta: [], activo: null }
@@ -140,12 +149,13 @@ export function inicializarGrafo(steps, index) {
     const visibles = new Set([primer])
     const edges = []
 
-    // La base del primer nodo entra de inmediato: sin ella no hay punto de partida.
-    for (const pre of lesson.prereq) {
-        const l = index.get(pre)
-        if (!l) continue
-        visibles.add(l.id)
-        edges.push({ id: `${l.id}->${primer}:prereq`, from: l.id, to: primer, kind: 'prereq' })
+    if (conBase) {
+        for (const pre of lesson.prereq) {
+            const l = index.get(pre)
+            if (!l) continue
+            visibles.add(l.id)
+            edges.push({ id: `${l.id}->${primer}:prereq`, from: l.id, to: primer, kind: 'prereq' })
+        }
     }
 
     return {

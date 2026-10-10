@@ -33,11 +33,14 @@ export default function GraphCanvas({
     onContinuar,
     onAbrir,
     onMarcarCursada,
+    onAnadirAntes,
     progreso,
     onReiniciar,
     pendientesActivos,
     desplegando,
     onViewport,
+    catedral,
+    material,
 }) {
     const contenedorRef = useRef(null)
     const [viewport, setViewport] = useState({ width: 900, height: 640 })
@@ -197,6 +200,17 @@ export default function GraphCanvas({
     const nuevasIds = useMemo(() => new Set(ultimoDespliegue?.ids || []), [ultimoDespliegue])
     const resaltadas = useMemo(() => (activo ? [activo] : []), [activo])
 
+    // Las etiquetas de arista: lo que cada nodo entrega a los que dependen de
+    // el. Es la diferencia entre un diagrama y un diseno.
+    const etiquetas = useMemo(() => {
+        const mapa = new Map()
+        for (const edge of edges) {
+            const entrega = catalogoIndex.get(edge.from)?.entrega
+            if (entrega) mapa.set(edge.id, entrega)
+        }
+        return mapa
+    }, [edges, catalogoIndex])
+
     const vacio = !lecciones.length
 
     return (
@@ -228,6 +242,7 @@ export default function GraphCanvas({
                         posiciones={posiciones}
                         resaltadas={resaltadas}
                         ultimoDespliegue={ultimoDespliegue?.ids || []}
+                        etiquetas={etiquetas}
                     />
                     <EdgeHitAreas edges={edges} posiciones={posiciones} onSeleccionar={() => {}} />
 
@@ -252,7 +267,7 @@ export default function GraphCanvas({
                 </div>
             </div>
 
-            {vacio && <LienzoVacio />}
+            {vacio && <LienzoVacio catedral={catedral} material={material} />}
 
             {/* Barra de herramientas del lienzo */}
             <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
@@ -284,6 +299,7 @@ export default function GraphCanvas({
                     onAbrir={() => onAbrir(activo)}
                     onCerrar={() => onSeleccionar(null)}
                     onMarcar={() => onMarcarCursada(activo)}
+                    onAnadirAntes={() => onAnadirAntes(activo)}
                     onCentrar={() => centrarEnNodo(activo)}
                 />
             )}
@@ -322,7 +338,7 @@ function PlaybackBar({ progreso, onReiniciar, visible }) {
     return (
         <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-ink-700/70 bg-ink-900/85 px-3 py-2 backdrop-blur">
             <span className="font-display text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Ruta
+                Gameflow
             </span>
             <div className="h-1.5 w-32 overflow-hidden rounded-full bg-ink-700">
                 <div
@@ -353,6 +369,7 @@ function TarjetaActiva({
     onAbrir,
     onCerrar,
     onMarcar,
+    onAnadirAntes,
     onCentrar,
 }) {
     if (!lesson) return null
@@ -403,11 +420,11 @@ function TarjetaActiva({
                 <div className="mb-3 flex flex-wrap gap-1.5">
                     {cursada && (
                         <span className="rounded-md bg-aura-mint/15 px-2 py-0.5 text-[10px] font-semibold text-aura-mint">
-                            ya cursada
+                            ya definida
                         </span>
                     )}
                     <span className="rounded-md bg-ink-700/70 px-2 py-0.5 text-[10px] text-slate-400">
-                        {lesson.durationMin} min
+                        {lesson.durationMin} Min. juego
                     </span>
                     {lesson.prereq.length > 0 && (
                         <span className="rounded-md bg-aura-amber/10 px-2 py-0.5 text-[10px] text-aura-amber">
@@ -432,18 +449,31 @@ function TarjetaActiva({
                         </span>
                     </button>
 
+                    {/* La accion del metodo: el diseño va hacia atras. */}
+                    <button
+                        type="button"
+                        data-accion="anadir-antes"
+                        onClick={onAnadirAntes}
+                        title="Añadir una pieza que tiene que estar resuelta antes de esta"
+                        className="flex w-full items-center justify-between rounded-xl border border-aura-violet/50 bg-aura-violet/10 px-3 py-2.5 text-left transition-colors hover:bg-aura-violet/20"
+                    >
+                        <span className="font-display text-[13px] font-semibold text-aura-violet">
+                            ＋ Añadir lo que hace falta antes
+                        </span>
+                    </button>
+
                     <div className="flex gap-2">
                         <button
                             type="button"
                             onClick={onAbrir}
                             className="flex-1 rounded-xl bg-gradient-to-r from-aura-cyan to-aura-mint px-3 py-2 font-display text-[13px] font-semibold text-ink-950 transition-opacity hover:opacity-90"
                         >
-                            Estudiar lección
+                            Estudiar nodo
                         </button>
                         <button
                             type="button"
                             onClick={onMarcar}
-                            title={cursada ? 'Ya esta marcada como cursada' : 'Marcar como cursada'}
+                            title={cursada ? 'Ya esta marcada como definida' : 'Marcar como definida'}
                             className={`rounded-xl border px-3 py-2 text-[12px] transition-colors ${
                                 cursada
                                     ? 'border-aura-mint/60 text-aura-mint'
@@ -467,7 +497,59 @@ function TarjetaActiva({
     )
 }
 
-function LienzoVacio() {
+function LienzoVacio({ catedral, material = 0 }) {
+    // Sin catedral no hay premisa, y sin premisa no hay nada que diseñar: el
+    // lienzo no finge un estado vacío neutro, dice en qué punto está el diseño.
+    if (!catedral) {
+        return (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="max-w-md text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-ink-700 bg-ink-900/80">
+                        <span className="font-mono text-xl text-aura-cyan">⌘</span>
+                    </div>
+                    <h2 className="mb-2 font-display text-lg font-semibold text-slate-200">
+                        Falta la premisa
+                    </h2>
+                    <p className="text-sm leading-relaxed text-slate-400">
+                        Elige primero la catedral: es ella la que decide qué misterios existen.
+                    </p>
+                </div>
+            </div>
+        )
+    }
+
+    const misterios = catedral.misterios?.length || 0
+
+    if (misterios === 0) {
+        return (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="max-w-md text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-aura-cyan/40 bg-ink-900/80">
+                        <span className="font-mono text-xl text-aura-cyan">⌘</span>
+                    </div>
+                    <h2 className="mb-2 font-display text-lg font-semibold text-slate-200">
+                        {catedral.nombre}
+                    </h2>
+                    <p className="text-sm leading-relaxed text-slate-400">
+                        {material === 0 ? (
+                            <>
+                                Todavía no hay <span className="text-slate-200">material</span> sobre la
+                                mesa. Primero qué tenemos en esta catedral; después, qué misterio podemos
+                                inducir con ello.
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-slate-200">{material} opción(es)</span> de material
+                                sobre la mesa, y todavía ningún misterio estudiado. El paso siguiente es
+                                abrir el grafo de un anclaje y empezar por el final.
+                            </>
+                        )}
+                    </p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="max-w-md text-center">
@@ -475,10 +557,10 @@ function LienzoVacio() {
                     <span className="font-mono text-xl text-aura-cyan">◈</span>
                 </div>
                 <h2 className="mb-2 font-display text-lg font-semibold text-slate-200">
-                    Escribe qué quieres aprender
+                    Escribe qué quieres descubrir
                 </h2>
                 <p className="text-sm leading-relaxed text-slate-400">
-                    El clasificador buscará en el catálogo y propondrá una ruta. Al aceptarla, el grafo se
+                    El motor buscará en las piezas y propondrá un gameflow. Al aceptarlo, el grafo se
                     despliega nodo por nodo con <span className="text-aura-cyan">ver continuación</span>.
                 </p>
             </div>

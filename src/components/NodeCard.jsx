@@ -63,20 +63,23 @@ function NodeCardBase({
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[10px]">
-                    <span className="rounded-md bg-ink-700/70 px-1.5 py-0.5 font-medium text-slate-300">
-                        N{nivel.short}
+                    <span
+                        className="rounded-md bg-ink-700/70 px-1.5 py-0.5 font-medium text-slate-300"
+                        title={`Concreción: ${nivel.label}`}
+                    >
+                        {nivel.short}
                     </span>
                     <span className="rounded-md bg-ink-700/70 px-1.5 py-0.5 text-slate-400">
                         {lesson.durationMin}′
                     </span>
                     {cursada && (
                         <span className="rounded-md bg-aura-mint/15 px-1.5 py-0.5 font-semibold text-aura-mint">
-                            cursada
+                            definida
                         </span>
                     )}
                     {!cursada && enRuta && (
                         <span className="rounded-md bg-aura-cyan/15 px-1.5 py-0.5 font-semibold text-aura-cyan">
-                            en ruta
+                            en gameflow
                         </span>
                     )}
                     {lesson.origin === 'generado' && (

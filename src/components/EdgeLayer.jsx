@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { trazarConexion } from '../graph/graphEngine.js'
+import { puntoMedio, trazarConexion } from '../graph/graphEngine.js'
 
 const COLOR = {
     prereq: { trazo: 'rgba(251,191,36,0.55)', activo: '#fbbf24' },
@@ -7,7 +7,14 @@ const COLOR = {
     ruta: { trazo: 'rgba(56,189,248,0.6)', activo: '#38bdf8' },
 }
 
-function EdgeLayerBase({ edges, posiciones, resaltadas = [], ultimoDespliegue = [], onSeleccionar }) {
+function EdgeLayerBase({
+    edges,
+    posiciones,
+    resaltadas = [],
+    ultimoDespliegue = [],
+    etiquetas,
+    onSeleccionar,
+}) {
     const nuevas = new Set(ultimoDespliegue)
 
     return (
@@ -84,10 +91,42 @@ function EdgeLayerBase({ edges, posiciones, resaltadas = [], ultimoDespliegue = 
                                 opacity={0.9}
                             />
                         )}
+
+                        {/* LA ETIQUETA: qué te llevas de este nodo. En un PDC la
+                            flecha dice QUÉ transfiere; sin esto solo hay rayas. */}
+                        {etiquetas?.get(edge.id) && (
+                            <Etiqueta
+                                texto={etiquetas.get(edge.id)}
+                                origen={origen}
+                                destino={destino}
+                                activa={resaltada}
+                            />
+                        )}
                     </g>
                 )
             })}
         </svg>
+    )
+}
+
+/** Etiqueta de arista con halo, para que se lea sobre las conexiones. */
+function Etiqueta({ texto, origen, destino, activa }) {
+    const medio = puntoMedio(origen, destino)
+    return (
+        <text
+            x={medio.x}
+            y={medio.y - 7}
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="600"
+            fill={activa ? '#f8fafc' : '#cbd5e1'}
+            stroke="#05070d"
+            strokeWidth="3.5"
+            paintOrder="stroke"
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+            {texto}
+        </text>
     )
 }
 

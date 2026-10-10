@@ -37,13 +37,13 @@ export default function RouteDetails({
         >
             <div className="flex items-center gap-1 border-b border-ink-700/60 p-2">
                 <Pestana activa={pestana === 'ruta'} onClick={() => setPestana('ruta')}>
-                    Ruta
+                    Gameflow
                 </Pestana>
                 <Pestana activa={pestana === 'activa'} onClick={() => setPestana('activa')}>
-                    Lección activa
+                    Nodo activo
                 </Pestana>
                 <Pestana activa={pestana === 'catalogo'} onClick={() => setPestana('catalogo')}>
-                    Catálogo
+                    Piezas
                 </Pestana>
             </div>
 
@@ -131,7 +131,7 @@ function SeccionRuta({
                     ))}
                 </div>
                 <p className="pt-1 text-center text-[11px] text-slate-500">
-                    Interpretando la petición y ordenando la ruta…
+                    Interpretando la petición y ordenando el gameflow…
                 </p>
             </div>
         )
@@ -142,7 +142,7 @@ function SeccionRuta({
             <div className="p-4">
                 <div className="rounded-xl border border-aura-rose/40 bg-aura-rose/[0.07] p-3">
                     <div className="mb-1 font-display text-[12px] font-semibold text-aura-rose">
-                        El clasificador falló
+                        El motor falló
                     </div>
                     <p className="text-[11.5px] leading-relaxed text-slate-300">{error}</p>
                     <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
@@ -162,10 +162,10 @@ function SeccionRuta({
                 </div>
                 <ol className="space-y-2.5">
                     {[
-                        'Escribe qué quieres aprender en el panel izquierdo.',
-                        'El clasificador busca en el catálogo, ordena los prerequisitos y arma la ruta.',
-                        'Pulsa Play: el grafo abre con el primer nodo y su base.',
-                        'En cada nodo, "ver continuación" despliega el siguiente anillo de lecciones.',
+                        'Elige la catedral. Es el escenario real y lo que decide qué material existe.',
+                        'Mira qué tenemos: las opciones que ya existen allí, por los cuatro pilares.',
+                        'Abre el grafo de un anclaje: abre por el FINAL, por la herejía, no por la piedra.',
+                        'En cada nodo, "ver continuación" revela lo que hace falta antes.',
                     ].map((texto, i) => (
                         <li key={i} className="flex gap-2.5">
                             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-ink-700/70 font-mono text-[10px] text-aura-cyan">
@@ -194,7 +194,7 @@ function SeccionRuta({
                     {materia.label}
                 </span>
                 <span className="text-[10.5px] text-slate-500">
-                    {ruta.estimatedMin ? `${ruta.estimatedMin} min` : ''}
+                    {ruta.estimatedMin ? `${ruta.estimatedMin} Min. juego` : ''}
                 </span>
                 <span className="ml-auto font-mono text-[10px] text-slate-500">{ruta.generatedBy}</span>
             </div>
@@ -208,7 +208,7 @@ function SeccionRuta({
 
             {ruta.fallbackReason && (
                 <div className="mb-3 rounded-lg border border-aura-amber/30 bg-aura-amber/[0.07] px-2.5 py-2 text-[10.5px] text-aura-amber">
-                    Se usó el clasificador local: {ruta.fallbackReason}
+                    Se usó el motor local: {ruta.fallbackReason}
                 </div>
             )}
 
@@ -218,7 +218,7 @@ function SeccionRuta({
                     onClick={() => onReproducir()}
                     className="flex-1 rounded-xl bg-gradient-to-r from-aura-cyan to-aura-mint px-3 py-2.5 font-display text-[13px] font-semibold text-ink-950 transition-opacity hover:opacity-90"
                 >
-                    ▶ Play ruta
+                    ▶ Play gameflow
                 </button>
                 <button
                     type="button"
@@ -247,7 +247,7 @@ function SeccionRuta({
             {ruta.rationale && (
                 <div className="mb-4 rounded-xl border border-ink-700/60 bg-ink-850/40 p-3">
                     <div className="mb-1 font-display text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                        Por qué esta ruta
+                        Por qué este gameflow
                     </div>
                     <p className="text-[11.5px] leading-relaxed text-slate-400">{ruta.rationale}</p>
                 </div>
@@ -284,7 +284,7 @@ function SeccionRuta({
                 onClick={onNuevaConsulta}
                 className="mt-4 w-full rounded-xl border border-ink-700/70 px-3 py-2 text-[11.5px] text-slate-400 transition-colors hover:border-ink-500 hover:text-slate-200"
             >
-                Descartar ruta
+                Descartar gameflow
             </button>
 
             <button
@@ -292,7 +292,7 @@ function SeccionRuta({
                 onClick={() => setVerDetalle((v) => !v)}
                 className="mt-3 w-full text-left text-[10.5px] text-slate-500 transition-colors hover:text-slate-300"
             >
-                {verDetalle ? '▾' : '▸'} Detalles del clasificador
+                {verDetalle ? '▾' : '▸'} Detalles del motor
             </button>
             {verDetalle && (
                 <pre className="sin-scrollbar mt-2 overflow-x-auto rounded-lg border border-ink-700/60 bg-ink-950/70 p-2.5 font-mono text-[10px] leading-relaxed text-slate-400">
@@ -365,7 +365,7 @@ function SeccionActiva({ lesson, cursada, onAbrir, onContinuar, catalogoIndex, o
     if (!lesson) {
         return (
             <div className="p-4 text-[12px] text-slate-500">
-                Ninguna lección seleccionada. Haz clic en un nodo del grafo.
+                Ningún nodo seleccionado. Haz clic en un nodo del grafo.
             </div>
         )
     }
@@ -383,7 +383,7 @@ function SeccionActiva({ lesson, cursada, onAbrir, onContinuar, catalogoIndex, o
                     {materia.glyph}
                 </span>
                 <span className="font-display text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
-                    {materia.label} · {nivel.label} · {lesson.durationMin} min
+                    {materia.label} · {nivel.label} · {lesson.durationMin} Min. juego
                 </span>
             </div>
 
@@ -394,7 +394,7 @@ function SeccionActiva({ lesson, cursada, onAbrir, onContinuar, catalogoIndex, o
 
             {cursada && (
                 <div className="mb-3 rounded-lg bg-aura-mint/10 px-2.5 py-1.5 text-[11px] text-aura-mint">
-                    Ya marcada como cursada
+                    Ya marcada como definida
                 </div>
             )}
 
@@ -404,7 +404,7 @@ function SeccionActiva({ lesson, cursada, onAbrir, onContinuar, catalogoIndex, o
                     onClick={() => onAbrir(lesson.id)}
                     className="flex-1 rounded-xl bg-gradient-to-r from-aura-cyan to-aura-mint px-3 py-2.5 font-display text-[12.5px] font-semibold text-ink-950 transition-opacity hover:opacity-90"
                 >
-                    Leer lección
+                    Leer nodo
                 </button>
                 <button
                     type="button"
@@ -512,7 +512,7 @@ function SeccionCatalogo({ catalogo, generadas, completadas, onSeleccionar }) {
             <input
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
-                placeholder="Filtrar lecciones…"
+                placeholder="Filtrar nodos…"
                 className="mb-2 w-full rounded-xl border border-ink-700 bg-ink-950/70 px-3 py-2 text-[12px] text-slate-100 placeholder:text-slate-500 focus:border-aura-cyan/70 focus:outline-none"
             />
             <div className="mb-3 flex items-center gap-2">
@@ -547,7 +547,7 @@ function SeccionCatalogo({ catalogo, generadas, completadas, onSeleccionar }) {
                                         style={{ backgroundColor: materia.color }}
                                     />
                                     <span className="text-[9.5px] uppercase tracking-wide text-slate-500">
-                                        {materia.label} · N{lesson.level}
+                                        {materia.label} · {levelOf(lesson).label}
                                     </span>
                                     {lesson.origin === 'generado' && (
                                         <span className="rounded bg-aura-violet/15 px-1 text-[9px] font-semibold text-aura-violet">

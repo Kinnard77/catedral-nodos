@@ -1,7 +1,7 @@
 import { Component } from 'react'
 
 /**
- * Frontera de errores: si un componente revienta, la academia se queda en negro
+ * Frontera de errores: si un componente revienta, el gameflow se queda en negro
  * y sin pistas. Este limite muestra la excepcion real y permite reintentar.
  */
 export default class ErrorBoundary extends Component {
@@ -17,7 +17,7 @@ export default class ErrorBoundary extends Component {
     componentDidCatch(error, info) {
         this.setState({ info })
         // Queda en la consola para depuracion con el navegador abierto.
-        console.error('Academia: fallo de render', error, info)
+        console.error('Gameflow: fallo de render', error, info)
     }
 
     render() {
@@ -28,11 +28,11 @@ export default class ErrorBoundary extends Component {
             <div className="flex h-full w-full items-center justify-center bg-ink-950 p-8">
                 <div className="panel max-w-lg rounded-2xl p-5">
                     <h1 className="mb-2 font-display text-base font-semibold text-aura-rose">
-                        Algo falló al dibujar la academia
+                        Algo falló al dibujar el gameflow
                     </h1>
                     <p className="mb-3 text-[12.5px] leading-relaxed text-slate-400">
-                        El error quedó registrado en la consola del navegador. Puedes reintentar sin perder tu
-                        catálogo ni tu progreso.
+                        El error quedó registrado en la consola del navegador. Puedes reintentar sin perder tus
+                        piezas ni tu progreso.
                     </p>
                     <pre className="sin-scrollbar mb-4 max-h-48 overflow-auto rounded-xl border border-ink-700/60 bg-ink-950/80 p-3 font-mono text-[11px] leading-relaxed text-aura-rose">
                         {String(error?.stack || error?.message || error)}

@@ -1,21 +1,296 @@
 import { createLocalProvider } from './localProvider.js'
-import { buildCatalogMessage, callChatCompletions, extractJson, parseRouteResponse, SYSTEM_PROMPT } from './llmProvider.js'
-import { indexById, mergeLessons, SEED_LESSONS } from '../data/catalog.js'
+import { buildCatalogMessage, callChatCompletions, extractJson, parseRouteResponse, soportaJsonMode, SYSTEM_PROMPT } from './llmProvider.js'
+import { CATALOGO_GEMINI, NIVEL_RAZONAMIENTO, listarModelos, normalizarModeloId } from './gemini.js'
+import { probarInteraccion } from './interacciones.js'
+import { aplicarEnlaces, indexById, mergeLessons, SEED_LESSONS } from '../data/catalog.js'
 import { normalizeLesson } from '../domain/lesson.js'
 import { emptyRoute, retrieveLessons } from './contract.js'
 
 export const DEFAULT_LLM = {
+    provider: 'compatible',
     baseUrl: 'https://api.deepseek.com/v1',
     model: 'deepseek-chat',
+    /**
+     * Buscar en Google al investigar.
+     */
+    buscarWeb: true,
 }
 
+/**
+ * Proveedores disponibles.
+ *
+ * `provider` distingue los que hablan el protocolo compatible con OpenAI de los
+ * que tienen API propia. Google va por la NATIVA, no por su capa compatible:
+ * asi la URL es inequivocamente de Google y, sobre todo, se tiene acceso a la
+ * busqueda con fuentes.
+ */
 export const PRESETS = [
-    { id: 'deepseek', label: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-    { id: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
-    { id: 'groq', label: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
-    { id: 'together', label: 'Together', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
-    { id: 'ollama', label: 'Ollama local', baseUrl: 'http://localhost:11434/v1', model: 'llama3.1' },
+    {
+        id: 'google',
+        label: 'Google AI Studio',
+        provider: 'google',
+        baseUrl: '',
+        model: 'gemini-3.8-flash',
+        nota: 'API NATIVA de Gemini. La clave se saca en aistudio.google.com. El formato cambió: las nuevas empiezan por AQ… y las antiguas por AIza…; valen las dos. La clave NO está atada a un modelo: da acceso a todo el catálogo, y la herramienta elige el que tu clave tenga disponible. Sabe buscar en Google y devuelve las fuentes que consulta.',
+    },
+    {
+        id: 'moonshot',
+        label: 'Moonshot · Kimi K3',
+        provider: 'compatible',
+        baseUrl: 'https://api.moonshot.ai/v1',
+        model: 'kimi-k3',
+        nota: 'Moonshot AI, compatible con OpenAI. Su plataforma tambien ofrece busqueda web como herramienta aparte.',
+    },
+    { id: 'deepseek', label: 'DeepSeek', provider: 'compatible', baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+    { id: 'openai', label: 'OpenAI', provider: 'compatible', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+    { id: 'together', label: 'Together', provider: 'compatible', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
+    { id: 'ollama', label: 'Ollama local', provider: 'compatible', baseUrl: 'http://localhost:11434/v1', model: 'llama3.1' },
 ]
+
+/**
+ * QUE MODELO USAR, DECIDIDO POR LA HERRAMIENTA.
+ *
+ * El disenador no tiene por que elegir modelo antes de conectar: la clave da
+ * acceso al catalogo, asi que se ordena por preferencia y se prueba. Se prefiere
+ * `flash` (equilibrado), luego `lite` (ligero) y se dejan para el final las
+ * vistas previas, que son las que mas se rompen.
+ *
+ * Si el usuario ya tenia uno escrito, ese va primero: su eleccion manda.
+ */
+export function candidatosDe(catalogo = [], preferido = '') {
+    const chats = catalogo.filter((m) => m.chat).map((m) => m.id)
+    const peso = (id) => (/flash/.test(id) ? 0 : 1) + (/lite/.test(id) ? 1 : 0) + (/preview/.test(id) ? 2 : 0)
+    const ordenados = [...chats].sort((a, b) => peso(a) - peso(b) || a.localeCompare(b))
+    const elegido = normalizarModeloId(preferido)
+    return [...new Set([...(elegido ? [elegido] : []), ...ordenados])]
+}
+
+/**
+ * LEER EL LIMITE DEL ERROR QUE YA TENEMOS. SIN HACER NI UNA PETICION.
+ *
+ * Antes esta funcion comprobaba el modelo sin busqueda y barria otros seis, para
+ * «averiguar» que se habia agotado. Eso eran hasta siete peticiones mas contra
+ * un limite de cinco por minuto: **el diagnostico causaba el problema que
+ * diagnosticaba.** Y Google ya dice en el error de que va: `too_many_requests`.
+ */
+export function diagnosticarCuota({ error } = {}) {
+    return {
+        codigo: error?.codigo || 0,
+        motivo: error?.motivo || '',
+        tipoLimite: error?.tipoLimite || 'desconocido',
+        statusGoogle: error?.statusGoogle || '',
+        retryAfter: error?.retryAfter || '',
+        // EL CUERPO CRUDO. Si no sabemos leer el error, el usuario tiene que
+        // poder leerlo él: esconder la evidencia y sustituirla por un resumen es
+        // exactamente el fallo que se cometio antes.
+        crudo: error?.detalle || '',
+        estado: 'del_error',
+        responden: [],
+        candidatos: [],
+        peticiones: 0,
+        barridoHecho: false,
+        pruebas: [],
+    }
+}
+
+/**
+ * EL BARRIDO, A PETICION Y CON EL PRECIO A LA VISTA.
+ *
+ * Se ofrece como boton aparte porque gasta una peticion por modelo, y en el plan
+ * gratuito eso es cuota diaria, no un detalle.
+ */
+export async function buscarModeloQueResponda({ apiKey, candidatos = [], signal }) {
+    const lista = candidatos.slice(0, 6)
+    const responden = []
+    const pruebas = []
+
+    for (const modelo of lista) {
+        try {
+            await probarInteraccion({ apiKey, model: modelo, buscar: false, thinkingLevel: 'low', signal })
+            responden.push(modelo)
+        } catch (err) {
+            pruebas.push(`${modelo}: ${err?.motivo || ''} ${err?.message || 'no respondió'}`.trim())
+        }
+    }
+
+    return { responden, pruebas, peticiones: lista.length }
+}
+
+/**
+ * PRUEBA DE CONEXION.
+ *
+ * Un unico mensaje minimo para comprobar que la clave, la URL y el modelo
+ * funcionan. Existe porque conectar una IA a ciegas es lo peor: si algo falla,
+ * el error tiene que salir aqui y no tres pantallas mas adelante.
+ *
+ * Con Google ademas pide una BUSQUEDA, asi que la prueba dice dos cosas: si la
+ * clave vale y si la busqueda con fuentes funciona.
+ */
+export async function probarMotor(settings = {}, { signal, catalogoPrevio = [] } = {}) {
+    const {
+        provider = 'compatible',
+        baseUrl = DEFAULT_LLM.baseUrl,
+        apiKey = '',
+        model = '',
+    } = settings.llm || {}
+    if (!apiKey) throw new Error('Falta la API key. Pégala y pulsa Conectar.')
+
+    if (provider === 'google') {
+        // CONECTAR = **UNA** PETICION.
+        //
+        // Aqui estaba el problema de verdad, y era mio. Esta funcion hacia hasta
+        // cinco peticiones en rafaga: el listado de modelos, tres intentos con
+        // modelos distintos y una comprobacion de diagnostico. Contra un limite
+        // de 5 por minuto, eso ES el `too_many_requests` que devolvia Google.
+        // La herramienta se frenaba a si misma y luego le echaba la culpa al
+        // plan del usuario.
+        //
+        // Ahora: el catalogo solo si no esta ya (y si falla, no pasa nada), y UN
+        // unico intento, sin buscador, que es la peticion mas barata posible.
+        let catalogo = Array.isArray(catalogoPrevio) ? catalogoPrevio : []
+        let peticiones = 0
+        try {
+            if (!catalogo.length) {
+                catalogo = await listarModelos({ apiKey, signal })
+                peticiones += 1
+            }
+        } catch {
+            /* sin catalogo se prueba con el modelo que haya: no es un requisito */
+        }
+
+        const candidatos = candidatosDe(catalogo, model)
+        const elegido = candidatos[0] || normalizarModeloId(model)
+        const disponibles = catalogo.filter((m) => m.chat).map((m) => m.id)
+        if (!elegido) throw new Error('No hay ningún modelo que probar. Revisa la clave.')
+
+        try {
+            const r = await probarInteraccion({
+                apiKey,
+                model: elegido,
+                buscar: false,
+                thinkingLevel: NIVEL_RAZONAMIENTO.general,
+                signal,
+            })
+            return {
+                ok: true,
+                ms: r.ms,
+                model: elegido,
+                respuesta: String(r.content || '').trim().slice(0, 200),
+                buscar: false,
+                fuentes: [],
+                consultas: [],
+                usage: r.usage,
+                modelos: disponibles,
+                catalogo,
+                peticiones: peticiones + 1,
+            }
+        } catch (err) {
+            // 429 = limite de ritmo: insistir con OTRO modelo lo empeora, porque
+            // el limite es de la cuenta. Aqui se para.
+            if (err?.codigo === 429 || /too_many_requests/i.test(err?.motivo || '')) {
+                // SIN peticiones de diagnostico: se lee del error que ya tenemos.
+                return {
+                    ok: false,
+                    cuota: true,
+                    model: elegido,
+                    modelos: disponibles,
+                    catalogo,
+                    peticiones: peticiones + 1,
+                    diagnostico: diagnosticarCuota({ error: err }),
+                }
+            }
+
+            // 503 (saturado) o 404 (no existe) NO son culpa de la cuenta, y ahi
+            // cambiar de modelo SI arregla las cosas. Se prueba UNO mas.
+            const alternativa = candidatos[1]
+            if (alternativa && [503, 404, 500].includes(err?.codigo)) {
+                try {
+                    const r = await probarInteraccion({
+                        apiKey,
+                        model: alternativa,
+                        buscar: false,
+                        thinkingLevel: NIVEL_RAZONAMIENTO.general,
+                        signal,
+                    })
+                    return {
+                        ok: true,
+                        ms: r.ms,
+                        model: alternativa,
+                        respuesta: String(r.content || '').trim().slice(0, 200),
+                        buscar: false,
+                        fuentes: [],
+                        consultas: [],
+                        usage: r.usage,
+                        modelos: disponibles,
+                        catalogo,
+                        peticiones: peticiones + 2,
+                        sustituto: true,
+                        avisoConexion: `«${elegido}» no respondió (${err?.motivo || err?.codigo}). Conectado con «${alternativa}».`,
+                    }
+                } catch (segundo) {
+                    // Si el segundo tambien falla por LIMITE, es de la cuenta.
+                    if (segundo?.codigo === 429 || /too_many_requests/i.test(segundo?.motivo || '')) {
+                        return {
+                            ok: false,
+                            cuota: true,
+                            model: alternativa,
+                            modelos: disponibles,
+                            catalogo,
+                            peticiones: peticiones + 2,
+                            diagnostico: diagnosticarCuota({ error: segundo }),
+                        }
+                    }
+                    // Si no, se cuentan LOS DOS errores tal cual los dio Google.
+                    throw new Error(
+                        `${err?.message || 'No se pudo conectar'} (y «${alternativa}»: ${
+                            segundo?.message || 'tampoco respondió'
+                        }).${
+                            disponibles.length
+                                ? ` Modelos que puede usar tu clave: ${disponibles.slice(0, 14).join(', ')}.`
+                                : ''
+                        }`,
+                    )
+                }
+            }
+            throw new Error(
+                `${err?.message || 'No se pudo conectar con Google'}.${
+                    disponibles.length
+                        ? ` Modelos que puede usar tu clave: ${disponibles.slice(0, 14).join(', ')}.`
+                        : ''
+                }`,
+            )
+        }
+    }
+
+    if (!model) throw new Error('Falta el nombre del modelo.')
+
+    const inicio = Date.now()
+    const { content, usage } = await callChatCompletions({
+        baseUrl,
+        apiKey,
+        model,
+        messages: [
+            { role: 'system', content: 'Responde unicamente con la palabra OK.' },
+            { role: 'user', content: 'Di OK.' },
+        ],
+        temperature: 0,
+        maxTokens: 16,
+        // Sin modo JSON: asi la prueba no falla por un campo opcional que el
+        // proveedor no acepte.
+        jsonMode: false,
+        signal,
+    })
+
+    return {
+        ok: true,
+        ms: Date.now() - inicio,
+        model,
+        respuesta: String(content || '').trim().slice(0, 80),
+        buscar: false,
+        fuentes: [],
+        usage,
+    }
+}
 
 /**
  * Cuantas fichas de catalogo se envian al modelo.
@@ -49,6 +324,7 @@ export function createLlmProvider(settings) {
                 apiKey,
                 model,
                 messages,
+                jsonMode: soportaJsonMode(baseUrl),
                 signal: options.signal,
             })
 
@@ -185,12 +461,13 @@ export function createClassifier(settings = {}) {
     }
 }
 
-/** Catalogo base + lecciones generadas en sesiones anteriores. */
-export function buildCatalog(generated = []) {
+/** Catalogo base + piezas generadas + enlaces de diseno añadidos a mano. */
+export function buildCatalog(generated = [], enlaces = {}) {
     const normales = generated
         .map((l) => ({ ...normalizeLesson(l), origin: l.origin || 'generado' }))
+    const lessons = aplicarEnlaces(mergeLessons(SEED_LESSONS, normales), enlaces)
     return {
-        lessons: mergeLessons(SEED_LESSONS, normales),
+        lessons,
         seed: SEED_LESSONS,
     }
 }
