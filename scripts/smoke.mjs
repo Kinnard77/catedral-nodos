@@ -60,6 +60,13 @@ import {
     resumenMaterial,
 } from '../src/domain/material.js'
 import { investigarCatedral, parseInvestigacion } from '../src/classifier/investigacion.js'
+import {
+    anclajesConMaterial,
+    grafoDesdeMaterial,
+    ordenDeDiseno,
+    tieneFinal,
+    tipoDeOpcion,
+} from '../src/domain/puente.js'
 import { materialValencia } from '../src/data/material/ejemplo-valencia.js'
 import { anclajesConGrafo, tieneGrafo } from '../src/data/gameflow/grafos.js'
 import { desplegar, inicializarGrafo, calcularLayout } from '../src/graph/graphEngine.js'
@@ -1606,6 +1613,75 @@ ok(
     'y la lista de modelos se anade solo como AYUDA, despues del error de Google',
 )
 globalThis.fetch = fetchPortero
+
+console.log('\n23. El puente: del material al grafo')
+// Hasta ahora el material y el lienzo no se hablaban, y por eso la herramienta no
+// servia para disenar. Cada opcion del material ES un nodo del GN-IEC por su clase.
+const V = 'valencia'
+const op = (id, clase, pilar, extra) =>
+    Object.assign(
+        { id, catedralId: V, clase, pilar, titulo: 'T ' + id, detalle: 'D ' + id, estado: 'por_verificar', descartado: false },
+        extra || {},
+    )
+const materialPrueba = [
+    op('ANC-01', 'anclaje', 'anclaje_visible'),
+    op('EPI-01', 'epigrafia', 'apocrifo'),
+    op('LIN-01', 'linguistica', 'apocrifo'),
+    op('RH-01', 'dato_curioso', 'dualidad_gremios'),
+    op('FIL-01', 'dato_curioso', 'secreto_filosofico'),
+]
+
+ok(tipoDeOpcion(materialPrueba[0]) === 'anchor', 'un anclaje es un nodo ANCHOR')
+ok(tipoDeOpcion(materialPrueba[1]) === 'epigraphy', 'una epigrafia es EPIGRAPHY')
+ok(tipoDeOpcion(materialPrueba[2]) === 'calambur', 'un juego linguistico es CALAMBUR')
+ok(tipoDeOpcion(materialPrueba[3]) === 'red_herring', 'un dato curioso es un ARENQUE ROJO')
+ok(tipoDeOpcion(materialPrueba[4]) === 'philosophical', 'y el secreto sin magia es el NUCLEO')
+ok(tipoDeOpcion({ clase: 'restriccion', pilar: 'apocrifo' }) === '', 'una restriccion no entra en el grafo')
+
+ok(
+    anclajesConMaterial(materialPrueba, V).join() === 'ANC-01',
+    'el anclaje de la catedral puede abrir su grafo',
+)
+ok(anclajesConMaterial([...materialPrueba, op('ANC-99', 'anclaje', 'anclaje_visible', { descartado: true })], V).length === 1, 'y uno descartado no')
+
+const grafoPuente = grafoDesdeMaterial(materialPrueba, 'ANC-01', V)
+ok(grafoPuente.length === 5, `el grafo sale del material entero (${grafo.length} nodos)`)
+ok(grafoPuente[0].tipo === 'anchor' && grafoPuente[0].prereq.length === 0, 'la piedra es la raiz y no depende de nada')
+ok(
+    grafoPuente.find((n) => n.id === 'EPI-01').prereq.join() === 'ANC-01',
+    'la epigrafia se lee EN la piedra',
+)
+ok(
+    grafoPuente.find((n) => n.id === 'LIN-01').prereq.join() === 'EPI-01',
+    'el calambur necesita la epigrafia',
+)
+ok(
+    grafoPuente.find((n) => n.id === 'RH-01').prereq.join() === 'ANC-01',
+    'el arenque rojo cuelga de la piedra: es la explicacion que atrapa',
+)
+const final = grafoPuente.find((n) => n.ancla)
+ok(final?.id === 'FIL-01', 'y el FINAL es el nucleo filosofico')
+ok(
+    tieneFinal(grafoPuente),
+    'el grafo tiene final, que es la condicion para poder disenarlo hacia atras',
+)
+ok(
+    final.prereq.includes('LIN-01') && final.prereq.includes('RH-01'),
+    'el final se sostiene sobre el calambur Y sobre el arenque: ruta dual',
+)
+
+const ordenPuente = ordenDeDiseno(grafoPuente).map((n) => n.id)
+ok(ordenPuente[0] === 'FIL-01', `se empieza por el FINAL, no por la piedra (${ordenPuente[0]})`)
+ok(
+    ordenPuente.filter((id) => id !== 'RH-01').pop() === 'ANC-01',
+    'y la RUTA PRINCIPAL termina en la piedra: lo ultimo que se disena es lo que se ve',
+)
+
+// Sin nucleo filosofico no hay final, y por tanto no hay nada que disenar.
+const sinFinal = grafoDesdeMaterial(materialPrueba.filter((o) => o.id !== 'FIL-01'), 'ANC-01', V)
+ok(sinFinal.length === 4, 'sin secreto filosofico el grafo se queda sin final')
+ok(!tieneFinal(sinFinal), 'y se dice: sin final no hay grafo que disenar')
+ok(grafoDesdeMaterial(materialPrueba, 'NO-EXISTE', V).length === 0, 'un anclaje inventado no da grafo')
 
 console.log(`\n${fallos === 0 ? 'TODO EN VERDE' : `${fallos} PRUEBA(S) FALLIDA(S)`}\n`)
 process.exit(fallos === 0 ? 0 : 1)
