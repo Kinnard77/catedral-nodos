@@ -1,22 +1,30 @@
 # ESTADO — qué tenemos, para leer y corregir
 
-## 0. LO SIGUIENTE QUE HAY QUE HACER (relevo; 3 commits ya subidos)
+## 0. LO SIGUIENTE QUE HAY QUE HACER (relevo)
 
-**CONECTAR EL PUENTE A LA PANTALLA.** El puente ya existe y está probado
-(`src/domain/puente.js`, commit `1ed6b25`), pero **no está cableado**: hoy pulsar
-«Ver el grafo» en un anclaje sigue diciendo «Sin grafo todavía».
+### HECHO: el puente ya está cableado (commit `9c67f24`)
 
-1. `src/hooks/useAcademy.js` → `verGrafoDe(anclajeId)`: en vez de `clasificar()`,
-   construir las lecciones desde el material y desplegarlas (mirar cómo lo hacen
-   hoy `reproducir`/`ruta`).
-2. `tieneGrafo` → calcularlo desde el material con `anclajesConMaterial(...)`, no
-   desde un mapa fijo (hoy `src/data/gameflow/grafos.js` está **vacío a propósito**).
-3. `scripts/e2e.mjs` sección 6: hoy comprueba que el anclaje dice «Sin grafo
-   todavía» y que el lienzo está vacío. **Con el cableado eso cambia**: hay que
-   comprobar que el grafo SE ABRE y que sus nodos salen del material inyectado.
+Pulsar **«Ver el grafo»** en un anclaje **construye el grafo con el material de la
+mesa y lo despliega abriendo por el FINAL**. El botón se activa según lo que HAYA
+en la mesa, no según un mapa fijo.
 
-**Y después**, lo que pidió el diseñador: que pulsar una opción del material
-**cree su nodo** en el grafo de su anclaje.
+Dos detalles que costaron encontrar y quedan escritos en el código:
+- `inicializarGrafo` encadena por **`lessonId`**, no por `id`.
+- Abre por el **PRIMER elemento** de la lista, así que las lecciones van en
+  **orden de diseño** (el final primero). En orden de recorrido, abriría por la
+  piedra y el diseño iría al revés del método.
+
+### LO SIGUIENTE: crear nodos desde el material, opción a opción
+
+Hoy el grafo se monta **de golpe** con todo el material de la catedral. Lo que
+falta es lo que pidió el diseñador: que **pulsar una opción del material cree SU
+nodo** en el grafo de su anclaje, para poder ir montando la narrativa pieza a
+pieza — y para que se vea el injerto del apócrifo sobre la base googleable.
+
+Piezas: `src/domain/puente.js` (ya tiene `tipoDeOpcion`, `grafoDesdeMaterial`,
+`ordenDeDiseno`), `useAcademy.verGrafoDe` (ya despliega), y el panel de material.
+
+---
 
 ## 0.bis Lo que YA funciona (verificado)
 
@@ -24,7 +32,7 @@
   clave `AQ…`, `gemini-3.8-flash`, 27 modelos disponibles.
 - **La investigación previa funciona**: trae candidatos (probado: 8) y **nunca
   certifica**. Solo la mano del diseñador pasa algo a «documentado».
-- **El puente** (material → grafo) existe y está probado, **sin cablear** (§0).
+- **El puente funciona de punta a punta**: material → grafo, abriendo por el final.
 - **Los errores de Google se enseñan crudos**, sin recortar ni traducir.
 - **Sin material de ejemplo**: el panel arranca vacío; lo que hay es del motor.
 - `npm test` 25 secciones y `npm run test:e2e` 11 secciones, en verde.
