@@ -1,5 +1,41 @@
 # ESTADO — qué tenemos, para leer y corregir
 
+## 0. LO SIGUIENTE QUE HAY QUE HACER (relevo; 3 commits ya subidos)
+
+**CONECTAR EL PUENTE A LA PANTALLA.** El puente ya existe y está probado
+(`src/domain/puente.js`, commit `1ed6b25`), pero **no está cableado**: hoy pulsar
+«Ver el grafo» en un anclaje sigue diciendo «Sin grafo todavía».
+
+1. `src/hooks/useAcademy.js` → `verGrafoDe(anclajeId)`: en vez de `clasificar()`,
+   construir las lecciones desde el material y desplegarlas (mirar cómo lo hacen
+   hoy `reproducir`/`ruta`).
+2. `tieneGrafo` → calcularlo desde el material con `anclajesConMaterial(...)`, no
+   desde un mapa fijo (hoy `src/data/gameflow/grafos.js` está **vacío a propósito**).
+3. `scripts/e2e.mjs` sección 6: hoy comprueba que el anclaje dice «Sin grafo
+   todavía» y que el lienzo está vacío. **Con el cableado eso cambia**: hay que
+   comprobar que el grafo SE ABRE y que sus nodos salen del material inyectado.
+
+**Y después**, lo que pidió el diseñador: que pulsar una opción del material
+**cree su nodo** en el grafo de su anclaje.
+
+## 0.bis Lo que YA funciona (verificado)
+
+- **El motor conecta**: Google AI Studio por la API **nativa** (Interactions API),
+  clave `AQ…`, `gemini-3.8-flash`, 27 modelos disponibles.
+- **La investigación previa funciona**: trae candidatos (probado: 8) y **nunca
+  certifica**. Solo la mano del diseñador pasa algo a «documentado».
+- **El puente** (material → grafo) existe y está probado, **sin cablear** (§0).
+- **Los errores de Google se enseñan crudos**, sin recortar ni traducir.
+- **Sin material de ejemplo**: el panel arranca vacío; lo que hay es del motor.
+- `npm test` 25 secciones y `npm run test:e2e` 11 secciones, en verde.
+
+## 0.ter Retirado (no borrado)
+
+Material de ejemplo del §4, grafo de ejemplo del §4, el mapa de grafos (vacío a
+propósito), las hojas de Material y Misterio, y el GDD de UMBRA.
+
+---
+
 Este documento no es un registro de decisiones (eso es [`DECISIONES.md`](DECISIONES.md)).
 Es el **mapa**: qué es esta herramienta hoy, qué puedes hacer con ella, de dónde salió cada
 idea y **qué partes conviene que revises porque son discutibles**.
