@@ -321,6 +321,24 @@ try {
         'sin clave no finge que investiga: lo dice',
     )
 
+    // El + DE UN PILAR DA SU AVISO PEGADO AL PILAR. El aviso global sale arriba,
+    // junto al boton grande; para pulsar el + de un pilar hay que bajar, asi que
+    // aquel queda fuera de la vista y PARECE QUE NO HA PASADO NADA. Aqui no hay
+    // clave, asi que el + tiene que fallar... y decirlo donde estas mirando.
+    await evaluar(`document.querySelector('[data-pedir-pilar="apocrifo"]')?.click()`)
+    ok(
+        await esperarA(`!!document.querySelector('[data-aviso-pilar="apocrifo"]')`, {
+            descripcion: 'el aviso pegado al pilar',
+        }),
+        'el + de un pilar avisa PEGADO AL PILAR, no solo arriba',
+    )
+    ok(
+        (await evaluar(
+            `document.querySelector('[data-aviso-pilar="apocrifo"]')?.innerText || ''`,
+        )).includes('clave'),
+        'y el aviso dice POR QUE: sin clave no hay investigacion',
+    )
+
     // --- 6. El grafo del anclaje, desde el final -----------------------------
     console.log('\n6. El puente: el anclaje abre SU grafo, desde el final')
     // Antes aqui se comprobaba que NO hubiera grafo, porque el unico que habia era

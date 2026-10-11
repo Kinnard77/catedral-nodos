@@ -507,6 +507,7 @@ export function useAcademy({ viewport = null } = {}) {
                 const yaEstan = new Set(materialCatedral.map(clave))
                 const nuevas = suyas.filter((o) => !yaEstan.has(clave(o)))
 
+                const etiqueta = PILARES[pilar]?.label || pilar
                 setMaterial((prev) => [
                     ...prev.filter((o) => o.catedralId !== catedralId),
                     ...materialCatedral,
@@ -515,13 +516,29 @@ export function useAcademy({ viewport = null } = {}) {
                 setAvisoInvestigacion(r.aviso || '')
                 setResultadoInvestigacion(
                     nuevas.length
-                        ? `Una más para ${PILARES[pilar]?.label || pilar}: «${nuevas[0].titulo}». Los otros pilares no se han tocado.`
-                        : `El motor no trajo ninguna opción nueva de ${PILARES[pilar]?.label || pilar}.`,
+                        ? `Una más para ${etiqueta}: «${nuevas[0].titulo}». Los otros pilares no se han tocado.`
+                        : `El motor no trajo ninguna opción nueva de ${etiqueta}.`,
                 )
-                return r
+                // Se devuelve el resultado PELADO para que el panel pueda dar el
+                // aviso PEGADO AL PILAR que se pulsó. El aviso global sale
+                // arriba, junto al botón grande: para pulsar el + de un pilar hay
+                // que bajar, así que aquél queda fuera de la vista y parece que
+                // no ha pasado nada.
+                return {
+                    ok: nuevas.length > 0,
+                    pilar,
+                    cuantas: nuevas.length,
+                    titulo: nuevas[0]?.titulo || '',
+                    motivo: nuevas.length
+                        ? ''
+                        : r.opciones.length
+                          ? 'El motor trajo opciones, pero ninguna de este pilar. No se ha añadido nada.'
+                          : 'El motor no trajo ninguna opción válida.',
+                }
             } catch (err) {
-                setErrorInvestigacion(err?.message || 'La investigación no respondió.')
-                return null
+                const texto = err?.message || 'La investigación no respondió.'
+                setErrorInvestigacion(texto)
+                return { ok: false, pilar, cuantas: 0, titulo: '', motivo: texto }
             } finally {
                 setInvestigando(false)
             }

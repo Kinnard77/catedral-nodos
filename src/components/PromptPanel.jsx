@@ -38,6 +38,47 @@ export default function PromptPanel({
     onRecuperar,
 }) {
     const [notas, setNotas] = useState('')
+
+    /** Qué pilar se está buscando, y el aviso PEGADO a ese pilar. */
+    const [buscandoPilar, setBuscandoPilar] = useState('')
+    const [avisoPilar, setAvisoPilar] = useState(null)
+
+    /**
+     * PEDIR UNA MÁS DE UN PILAR, CON EL AVISO PEGADO AL PILAR.
+     *
+     * El aviso global sale arriba, junto al botón grande. Para pulsar el ＋ de un
+     * pilar hay que bajar por la lista, así que aquel aviso queda fuera de la
+     * vista y **parece que no ha pasado nada**. Este sale debajo del pilar que se
+     * pulsó, y mientras trabaja el botón lo dice: «buscando…».
+     */
+    const pedirUnaMas = async (clave) => {
+        if (!onInvestigarPilar || buscandoPilar) return
+        setBuscandoPilar(clave)
+        setAvisoPilar(null)
+        try {
+            const r = await onInvestigarPilar(clave, notas)
+            const donde = PILARES[clave]?.label || clave
+            if (!r) {
+                setAvisoPilar({ pilar: clave, ok: false, texto: `No hubo respuesta del motor para ${donde}.` })
+            } else if (r.ok) {
+                setAvisoPilar({
+                    pilar: clave,
+                    ok: true,
+                    texto: `Una más para ${donde}: «${r.titulo}». Los otros pilares no se han tocado.`,
+                })
+            } else {
+                setAvisoPilar({
+                    pilar: clave,
+                    ok: false,
+                    texto: r.motivo || `El motor no trajo ninguna opción nueva de ${donde}.`,
+                })
+            }
+        } catch (e) {
+            setAvisoPilar({ pilar: clave, ok: false, texto: e?.message || 'Fallo al investigar.' })
+        } finally {
+            setBuscandoPilar('')
+        }
+    }
     const areaRef = useRef(null)
     const resumen = resumenMaterial(material)
     const vivas = opcionesVivas(material)
@@ -177,14 +218,35 @@ export default function PromptPanel({
                                         <button
                                             type="button"
                                             data-pedir-pilar={clave}
-                                            onClick={() => onInvestigarPilar?.(clave, notas)}
-                                            disabled={investigando}
+                                            onClick={() => pedirUnaMas(clave)}
+                                            disabled={investigando || Boolean(buscandoPilar)}
                                             title={`Buscar una más de ${pilar.label}`}
                                             className="ml-auto rounded-md border border-ink-700 px-1.5 py-0.5 font-mono text-[11px] leading-none text-slate-400 transition-colors hover:border-aura-cyan/60 hover:text-aura-cyan disabled:cursor-not-allowed disabled:opacity-40"
                                         >
-                                            ＋
+                                            {buscandoPilar === clave ? (
+                                                <span className="inline-flex items-center gap-1 text-aura-cyan">
+                                                    <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border border-aura-cyan border-t-transparent" />
+                                                    buscando…
+                                                </span>
+                                            ) : (
+                                                '＋'
+                                            )}
                                         </button>
                                     </div>
+                                    {/* EL AVISO VA AQUÍ, PEGADO AL PILAR: es donde
+                                        está mirando quien acaba de pulsar el ＋. */}
+                                    {avisoPilar?.pilar === clave && (
+                                        <p
+                                            data-aviso-pilar={clave}
+                                            className={`mb-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] leading-relaxed ${
+                                                avisoPilar.ok
+                                                    ? 'border-aura-mint/50 bg-aura-mint/10 text-slate-200'
+                                                    : 'border-aura-rose/50 bg-aura-rose/10 text-aura-rose'
+                                            }`}
+                                        >
+                                            {avisoPilar.texto}
+                                        </p>
+                                    )}
                                     {delPilar.length === 0 ? (
                                         <p className="rounded-xl border border-dashed border-ink-700/60 px-3 py-2 text-[11px] text-slate-500">
                                             Nada todavía en este pilar. Pulsa ＋ para pedir una.
