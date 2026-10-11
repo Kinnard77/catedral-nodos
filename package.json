@@ -12,7 +12,8 @@
         "test:e2e": "node scripts/e2e.mjs",
         "diag": "node scripts/diagnostico.mjs",
         "capturas": "node scripts/capturar.mjs",
-        "analizar": "node scripts/posiciones.mjs"
+        "analizar": "node scripts/posiciones.mjs",
+        "graphml": "node scripts/graphml.mjs"
     },
     "dependencies": {
         "katex": "^0.16.11",
