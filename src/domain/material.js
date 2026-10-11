@@ -167,8 +167,32 @@ export function anclajesDe(opciones = []) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * EL FILTRO DEL PILAR 1 — que el anclaje declare DESDE DONDE SE VE.
+ *
+ * La condicion del pilar `anclaje_visible` es **UNA sola: que este A LA VISTA**.
+ * En una catedral no se toca nada, asi que «al alcance del publico» NO quiere
+ * decir que se pueda tocar: quiere decir que **el visitante llega a verlo desde
+ * su recorrido**. Y eso solo se puede comprobar si la opcion dice DONDE esta.
+ *
+ * Sin ese dato, la opcion no es material de calidad para este pilar: podria
+ * estar tras una reja, a una altura imposible o en una zona cerrada — que es
+ * exactamente lo que dejo fuera las marcas de cantero.
+ *
+ * Devuelve el motivo si falta, o cadena vacia si la opcion pasa.
+ */
+export function faltaDondeSeVe(opcion) {
+    if (opcion?.clase !== 'anclaje') return ''
+    if (String(opcion?.ubicacion || '').trim()) return ''
+    return 'Un anclaje tiene que decir DESDE DÓNDE SE VE. Sin eso no se puede comprobar que el visitante llegue a verlo, y el pilar exige que esté A LA VISTA.'
+}
+
+/**
  * Marca una opcion como documentada. **Exige la fuente**: si no hay, no se
  * cambia nada y se devuelve el motivo. Es la regla del Grial en forma de boton.
+ *
+ * Y si es un ANCLAJE, exige ademas **desde donde se ve**: el pilar 1 tiene una
+ * condicion —A LA VISTA— y no se puede dar por buena una pieza que no diga
+ * donde esta. Mismo molde que la regla de la fuente: es una puerta, no un aviso.
  */
 export function documentar(opcion, fuente) {
     const limpia = String(fuente || '').trim()
@@ -179,6 +203,10 @@ export function documentar(opcion, fuente) {
             motivo:
                 'Para darla por documentada hay que anotar de dónde sale. Sin fuente se queda en «por verificar».',
         }
+    }
+    const sinUbicacion = faltaDondeSeVe(opcion)
+    if (sinUbicacion) {
+        return { ok: false, opcion, motivo: sinUbicacion }
     }
     return {
         ok: true,

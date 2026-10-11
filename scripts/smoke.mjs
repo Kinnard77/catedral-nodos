@@ -58,6 +58,7 @@ import {
     PILARES,
     recuperar,
     resumenMaterial,
+    faltaDondeSeVe,
 } from '../src/domain/material.js'
 import { investigarCatedral, parseInvestigacion } from '../src/classifier/investigacion.js'
 import {
@@ -794,6 +795,30 @@ ok(conRecibo.ok && conRecibo.opcion.estado === 'documentado', 'con fuente si se 
 ok(
     conRecibo.opcion.fuente === 'Libro de fábrica de la catedral, fol. 42',
     'y la fuente queda guardada en la opcion',
+)
+
+// EL FILTRO DEL PILAR 1 — la condicion es UNA: A LA VISTA.
+// En una catedral NO SE TOCA NADA: «al alcance» quiere decir que el visitante
+// LLEGA A VERLO. Y eso solo se comprueba si el anclaje dice DONDE esta. Mismo
+// molde que la regla de la fuente: es una puerta, no un aviso.
+const anclajeMudo = { ...candidata, clase: 'anclaje', pilar: 'anclaje_visible', ubicacion: '' }
+const sinUbicacion = documentar(anclajeMudo, 'Libro de fábrica, fol. 42')
+ok(!sinUbicacion.ok, 'un anclaje que no dice DESDE DONDE SE VE no se puede dar por documentado')
+ok(
+    sinUbicacion.motivo.includes('DESDE DÓNDE SE VE'),
+    'y se explica por que: el pilar exige que este A LA VISTA',
+)
+const anclajeVisto = {
+    ...anclajeMudo,
+    ubicacion: 'Nave del evangelio, tercer tramo, a la altura de los ojos',
+}
+ok(
+    documentar(anclajeVisto, 'Libro de fábrica, fol. 42').ok,
+    'con la ubicacion anotada si pasa: ya se puede comprobar que se ve',
+)
+ok(
+    faltaDondeSeVe(candidata) === '',
+    'y a una opcion que no es anclaje no se le pide: cada pilar tiene su condicion',
 )
 
 // Descartar no borra: marca. «No se tira nada.»
