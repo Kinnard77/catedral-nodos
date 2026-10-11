@@ -112,9 +112,15 @@ automático**.
 **Qué significa.** Si empiezas en cualquier pieza y sigues las flechas hacia abajo, **tienes que
 acabar en el final**.
 
-**Ejemplo de fallo.** Diseñas «la marca del cantero» y resulta que **ninguna pieza posterior la
-necesita**. Es preciosa y no sirve. Y lo peor: **el diseño inverso —que va del final hacia
-atrás— nunca la habría revelado**, porque no cuelga del final.
+**Ejemplo de fallo.** Diseñas una pieza que **ninguna posterior necesita**. Es preciosa y no
+sirve. Y lo peor: **el diseño inverso —que va del final hacia atrás— nunca la habría revelado**,
+porque no cuelga del final.
+
+> **Ojo con el ejemplo clásico:** las **marcas de cantero** están **eliminadas** como elemento.
+> Son dificilísimas de encontrar en la vida real y suelen estar en sitios inaccesibles, así que
+> no sirven para un turista. **No las propongas ni como ejemplo.** Lo que sí está vivo es la
+> **dualidad de gremios** como conflicto (cabildo contra canteros), que es el pilar 3 — pero eso
+> es **quién tenía motivo**, no **qué tiene que encontrar el jugador**.
 
 **Por qué importa.** `README.md` ya lo dice: *«toda pieza es ancestro del ancla»*. Esto lo
 convierte en algo que **se comprueba en lugar de confiar**.
