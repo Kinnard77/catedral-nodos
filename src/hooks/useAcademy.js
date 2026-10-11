@@ -58,6 +58,10 @@ export function useAcademy({ viewport = null } = {}) {
     const [avisoInvestigacion, setAvisoInvestigacion] = useState('')
     const [resultadoInvestigacion, setResultadoInvestigacion] = useState('')
     const [anclajeActivo, setAnclajeActivo] = useState(null)
+    /** Qué anclaje estaba abierto en cada catedral, para poder reabrirlo. */
+    const [anclajesAbiertos, setAnclajesAbiertos] = useState(
+        () => leer(CLAVES.anclajesAbiertos, {}) || {},
+    )
 
     // --- Las propuestas del motor, por catedral ------------------------------
     const [propuestas, setPropuestas] = useState(() => leer(CLAVES.propuestas, {}) || {})
@@ -115,6 +119,9 @@ export function useAcademy({ viewport = null } = {}) {
     useEffect(() => {
         guardar(CLAVES.propuestas, propuestas)
     }, [propuestas])
+    useEffect(() => {
+        guardar(CLAVES.anclajesAbiertos, anclajesAbiertos)
+    }, [anclajesAbiertos])
     useEffect(() => {
         guardar(CLAVES.progreso, completadas)
     }, [completadas])
@@ -473,6 +480,9 @@ export function useAcademy({ viewport = null } = {}) {
             if (!lecciones.length) return null
 
             setAnclajeActivo(anclajeId)
+            // Se recuerda qué anclaje estaba abierto EN ESTA catedral, para
+            // poder reabrirlo al volver. Es lo único que se guarda.
+            setAnclajesAbiertos((prev) => ({ ...prev, [catedralId]: anclajeId }))
             setGeneradas((prev) => [
                 ...prev.filter((p) => p.deAnclaje !== anclajeId),
                 ...lecciones,
@@ -512,6 +522,24 @@ export function useAcademy({ viewport = null } = {}) {
         },
         [material, premisa],
     )
+
+    /**
+     * AL VOLVER A UNA CATEDRAL SE REABRE SU ANCLAJE.
+     *
+     * Al cambiar de catedral el lienzo se vacía —que es lo correcto—, pero al
+     * volver se encontraba vacío y parecía que el trabajo se hubiera perdido. No
+     * se guarda el grafo dibujado: **se vuelve a construir**, porque el grafo es
+     * función del material, del misterio elegido y del anclaje. Solo se recuerda
+     * el anclaje. Vale también para una recarga de la página.
+     */
+    const catedralVista = useRef(null)
+    useEffect(() => {
+        const id = premisa?.catedralId || null
+        if (id === catedralVista.current) return
+        catedralVista.current = id
+        const recordado = anclajesAbiertos[id]
+        if (recordado) verGrafoDe(recordado)
+    }, [premisa?.catedralId, anclajesAbiertos, verGrafoDe])
 
     // --- La verificacion a mano ---------------------------------------------
     //

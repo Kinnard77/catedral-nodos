@@ -60,6 +60,15 @@ export const CLAVES = {
      */
     premisa: 'premisa',
     /**
+     * Qué anclaje estaba abierto en cada catedral: `{ catedralId: anclajeId }`.
+     *
+     * NO se guarda el grafo dibujado. El grafo es **función** del material, del
+     * misterio elegido y del anclaje, así que basta con recordar el anclaje y
+     * volver a construirlo. Guardar el dibujo sería duplicar estado y
+     * desincronizarlo en cuanto cambie el material.
+     */
+    anclajesAbiertos: 'anclajes-abiertos',
+    /**
      * Los elementos de cada catedral: el material con el que se diseña. Un
      * elemento real no entra sin la fuente que lo sostiene.
      */
