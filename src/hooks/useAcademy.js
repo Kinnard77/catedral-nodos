@@ -426,9 +426,25 @@ export function useAcademy({ viewport = null } = {}) {
                     materialPrevio: materialCatedral,
                     notas,
                 })
+                // LA INVESTIGACION SUMA, NO SUSTITUYE.
+                //
+                // Antes se borraba TODO el material de la catedral y se ponia
+                // solo lo nuevo: volver a investigar te tiraba lo que ya tenias
+                // —incluido lo que ya habias verificado a mano y con su fuente—.
+                // Y va contra la regla de la casa: «no se tira nada».
+                //
+                // Ahora se suma, y **lo que ya estaba MANDA**: si el motor
+                // repite una opcion, no pisa la tuya (que puede estar ya
+                // documentada o descartada). Solo entran las que son nuevas.
+                const clave = (o) => String(o?.titulo || o?.id || '').trim().toLowerCase()
+                const yaEstan = new Set(materialCatedral.map(clave))
+                const nuevas = r.opciones.filter((o) => !yaEstan.has(clave(o)))
+                const repetidas = r.opciones.length - nuevas.length
+
                 setMaterial((prev) => [
                     ...prev.filter((o) => o.catedralId !== catedralId),
-                    ...r.opciones,
+                    ...materialCatedral,
+                    ...nuevas,
                 ])
                 setAvisoInvestigacion(r.aviso || '')
                 // ESTO NO ES UN ERROR. La investigacion ha funcionado: trajo
@@ -436,8 +452,12 @@ export function useAcademy({ viewport = null } = {}) {
                 // quedado en «por verificar» es la regla aplicandose, no un
                 // fallo — y ensenarlo en rojo hacia creer lo contrario.
                 setResultadoInvestigacion(
-                    r.opciones.length
-                        ? `Investigación completada: ${r.opciones.length} opción(es) nuevas.${
+                    nuevas.length || repetidas
+                        ? `Investigación completada: ${nuevas.length} opción(es) nuevas.${
+                              repetidas > 0
+                                  ? ` ${repetidas} ya estaban sobre la mesa y se han respetado tal como las tenías.`
+                                  : ''
+                          }${
                               r.degradadas > 0
                                   ? ` ${r.degradadas} venían marcadas como documentadas y quedaron «por verificar»: la IA propone y tú confirmas.`
                                   : ''
