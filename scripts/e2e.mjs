@@ -373,6 +373,12 @@ try {
         (await texto()).includes('todavía no hay'),
         'sino que dice que todavía no hay material sobre la mesa',
     )
+    // Y EL LIENZO TAMBIEN SE VACIA. El material ya no se mezclaba, pero el GRAFO
+    // de Valencia se quedaba puesto y parecia de Toledo.
+    ok(
+        (await evaluar(`document.querySelectorAll('[data-node-id]').length`)) === 0,
+        'y el LIENZO se vacia: el grafo de la catedral anterior no se queda puesto',
+    )
 
     // --- 8. Persistencia ----------------------------------------------------
     console.log('\n8. La premisa y el material sobreviven la recarga')

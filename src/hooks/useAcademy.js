@@ -342,10 +342,29 @@ export function useAcademy({ viewport = null } = {}) {
      * Elige la catedral. Fija la premisa de todo el diseño: sin catedral no hay
      * nada que diseñar, porque es ella la que decide qué misterios existen.
      * El misterio se elige después (paso 2) y nace vacío a propósito.
+     *
+     * Y CAMBIAR DE CATEDRAL VACIA EL LIENZO. El grafo, las propuestas del motor,
+     * el anclaje activo y la ruta clasificada son el trabajo de la catedral
+     * anterior: si se quedan, parecen de esta. Si la catedral nueva no tiene
+     * nada trabajado, el lienzo se queda limpio.
+     *
+     * Lo que NO se borra es el material ni los misterios ya estudiados: cada uno
+     * guarda su `catedralId`, así que vuelven solos al volver a esa catedral.
+     * Cambiar de catedral cambia la VISTA, no tira el trabajo.
      */
-    const elegirCatedral = useCallback((catedralId) => {
-        setPremisa({ catedralId, misterioId: null, elegidaEn: new Date().toISOString() })
-    }, [])
+    const elegirCatedral = useCallback(
+        (catedralId) => {
+            setPremisa({ catedralId, misterioId: null, elegidaEn: new Date().toISOString() })
+            resetGrafo()
+            setPropuestas({})
+            setAnclajeActivo(null)
+            setRuta(null)
+            setEstado('inicial')
+            setPrompt('')
+            setError(null)
+        },
+        [resetGrafo],
+    )
 
     /** Añade una catedral que no estaba en la lista del diseñador. */
     const agregarCatedral = useCallback(
