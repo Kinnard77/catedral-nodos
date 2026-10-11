@@ -1,5 +1,9 @@
 # ESTADO — qué tenemos, para leer y corregir
 
+> **Antes de leer esto, lee [`NARRATIVA.md`](NARRATIVA.md).** Es el método completo en un solo
+> documento: las dos fases, las cuatro columnas, las reglas, las cinco piezas del desenlace y
+> qué falta por construir. Este `ESTADO.md` es el mapa técnico; aquél es el método.
+
 ## 0. LO SIGUIENTE QUE HAY QUE HACER (relevo)
 
 ### HECHO: el puente ya está cableado (commit `9c67f24`)
@@ -58,6 +62,18 @@ cambia.
 Un **lienzo de nodos** donde se diseña el gameflow de un juego de misterio que se juega con el
 móvil dentro de una catedral real. Se diseña **hacia atrás desde el final**: primero se decide
 qué descubre el jugador, y desde ahí se pregunta qué se necesita diseñar antes para conseguir ese final.
+
+**Lo primero es la trama.** La historia, la trama, el misterio y los personajes mandan; el grafo
+los sirve. **No es una cadena de puzles y acertijos con una historia pegada encima**: los puzles
+existen para contar el final. Un objeto no es nunca la meta — «no es buscar un escudo porque sí,
+¿qué sentido tiene en la historia?». Ver [`DECISIONES.md`](DECISIONES.md) §7, que corrige el
+malentendido de que un PDC no lleva trama (el PDC clásico **omite** los puntos de trama del
+dibujo para que se lean las dependencias; eso es legibilidad, no ausencia de historia).
+
+El juego **empieza dentro de la catedral** y se vive como una **audioguía con enigmas**: haces
+turismo, piensas y descubres. Lo que da atractivo comercial es el **misterio y el material de
+cada catedral**, no la forma. Los 90 minutos de jugador son reales pero **no son restricción dura
+todavía**: se ajustan después de tener la trama.
 
 **No es** la app del jugador. El juego se construye aparte, en Godot, y lo juega el turista en
 un `.apk`. Esta herramienta es el taller donde se decide el juego.
@@ -139,7 +155,9 @@ Esto es lo que hay que tumbar o confirmar. Está ordenado de lo más dudoso a lo
 5. **Los dos ejes (`subject` y `tipo`).** Hoy conviven: tema (Columnas) y clase de nodo
    (GN-IEC). Puede que solo deba quedar uno.
 6. **El campo `level` (Puzle / Metapuzzle / Lore).** Lo inventé para el grafo del GDD y con el
-   GN-IEC se ha quedado sin uso claro.
+   GN-IEC se ha quedado sin uso claro. **Confirmado que no tiene uso en el modelo actual**: el
+   diseñador no lo reconoce como suyo. Queda como candidato a retirar (el código se queda hasta
+   que se decida).
 7. **La orientación izquierda→derecha.** Decidiste mantenerla, pero tu §3 se dibuja de arriba
    abajo.
 8. **Mi vocabulario**: «premisa», «piezas», «gameflow», «ancla», «desplegar». Nada de eso es
@@ -213,4 +231,5 @@ src/data/gameflow/
   catedral-dolores.js        Invención del agente (retirada)
 src/graph/graphEngine.js     Despliegue progresivo + layout (heredado)
 DECISIONES.md                El registro de lo decidido, ronda por ronda
+PDC.md                       El análisis del grafo: ejes, regla del final, arrastre e integridad
 ```

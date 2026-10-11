@@ -9,6 +9,16 @@ descubra — y desde ahí se pregunta qué tiene que estar resuelto antes. El li
 una sola pieza y cada clic en *ver continuación* revela lo que hace falta antes, dibujando
 la dependencia.
 
+> **El método completo está en [`NARRATIVA.md`](NARRATIVA.md)** — las dos fases, las cuatro
+> columnas, las reglas y las cinco piezas del desenlace. Este README solo cuenta cómo se
+> arranca y cómo está montado el código.
+
+> **Lo primero es la trama, no los puzles.** El PDC ordena **cómo** se llega al final; la
+> historia decide **por qué** existe cada paso. Un objeto nunca es la meta: «no es buscar un
+> escudo porque sí, ¿qué sentido tiene en la historia?». El juego se vive como una audioguía
+> con enigmas dentro de la catedral, y la referencia de tono es *El Código Da Vinci*. Ver
+> [`DECISIONES.md`](DECISIONES.md) §7.
+
 **Pero antes del final va la premisa.** El lienzo no pregunta qué queremos que descubra el
 jugador: pregunta **en qué catedral vamos a trabajar**. La catedral es lo que decide qué
 misterios existen — no se puede descubrir el Santo Grial en Sevilla porque está en
