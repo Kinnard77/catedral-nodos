@@ -65,6 +65,7 @@ export default function App() {
         agregarCatedral,
         materialCatedral,
         investigar,
+        investigarPilar,
         investigando,
         errorInvestigacion,
         avisoInvestigacion,
@@ -186,6 +187,7 @@ export default function App() {
                     catedral={catedralActiva}
                     material={materialCatedral}
                     onInvestigar={investigar}
+                    onInvestigarPilar={investigarPilar}
                     investigando={investigando}
                     errorInvestigacion={errorInvestigacion}
                     avisoInvestigacion={avisoInvestigacion}

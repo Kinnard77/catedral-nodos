@@ -5,7 +5,7 @@ import { CATEDRALES, unirCatedrales } from '../data/catedrales.js'
 import { elementosDe, faltaFuente, IDIOMA_BASE } from '../domain/elemento.js'
 import { proponerMisterios as pedirMisterios } from '../classifier/misterios.js'
 import { investigarCatedral } from '../classifier/investigacion.js'
-import { materialDe, descartar, desdocumentar, documentar, recuperar } from '../domain/material.js'
+import { materialDe, descartar, desdocumentar, documentar, PILARES, recuperar } from '../domain/material.js'
 import { grafoDesdeMaterial, leccionesDesdeMaterial, tieneFinal } from '../domain/puente.js'
 import { CLAVES, borrarTodo, guardar, leer } from '../lib/storage.js'
 import {
@@ -476,6 +476,60 @@ export function useAcademy({ viewport = null } = {}) {
     )
 
     /**
+     * PIDE UNA MÁS DE UN PILAR — y no toca los otros tres.
+     *
+     * El botón global pide un lote de los cuatro pilares: trae un muro de
+     * candidatos y relee lo que ya tenías. Esto es lo contrario: **una sola, de
+     * un solo pilar**. Preciso, barato, y deja el resto quieto. Con una,
+     * decidir es instantáneo.
+     *
+     * Misma regla que la investigación normal: **SUMA, no sustituye**, y lo que
+     * ya estaba manda. Y si el motor se despista y trae de otro pilar, no entra.
+     */
+    const investigarPilar = useCallback(
+        async (pilar, notas = '') => {
+            const catedralId = premisa?.catedralId
+            if (!catedralId || !pilar) return null
+
+            setInvestigando(true)
+            setErrorInvestigacion(null)
+            try {
+                const r = await investigarCatedral({
+                    settings,
+                    catedral: catedralActiva,
+                    materialPrevio: materialCatedral,
+                    notas,
+                    pilar,
+                    cuantas: 1,
+                })
+                const suyas = r.opciones.filter((o) => o.pilar === pilar)
+                const clave = (o) => String(o?.titulo || o?.id || '').trim().toLowerCase()
+                const yaEstan = new Set(materialCatedral.map(clave))
+                const nuevas = suyas.filter((o) => !yaEstan.has(clave(o)))
+
+                setMaterial((prev) => [
+                    ...prev.filter((o) => o.catedralId !== catedralId),
+                    ...materialCatedral,
+                    ...nuevas,
+                ])
+                setAvisoInvestigacion(r.aviso || '')
+                setResultadoInvestigacion(
+                    nuevas.length
+                        ? `Una más para ${PILARES[pilar]?.label || pilar}: «${nuevas[0].titulo}». Los otros pilares no se han tocado.`
+                        : `El motor no trajo ninguna opción nueva de ${PILARES[pilar]?.label || pilar}.`,
+                )
+                return r
+            } catch (err) {
+                setErrorInvestigacion(err?.message || 'La investigación no respondió.')
+                return null
+            } finally {
+                setInvestigando(false)
+            }
+        },
+        [premisa, settings, catedralActiva, materialCatedral],
+    )
+
+    /**
      * VER EL GRAFO DE UN ANCLAJE — el puente, cableado.
      *
      * Antes esto clasificaba el titulo con el motor y desplegaba un grafo que no
@@ -825,6 +879,7 @@ export function useAcademy({ viewport = null } = {}) {
         material,
         materialCatedral,
         investigar,
+        investigarPilar,
         investigando,
         errorInvestigacion,
         avisoInvestigacion,

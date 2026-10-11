@@ -66,8 +66,50 @@ Responde UNICAMENTE con un objeto JSON valido:
   ]
 }`
 
+/**
+ * EL ENCARGO DIRIGIDO: «búscame UNA más de ESTE pilar».
+ *
+ * Pedir un lote de los cuatro pilares trae un muro de candidatos y toca lo que
+ * ya tenías. Pedir UNA de UN pilar es lo contrario: preciso, barato, y deja los
+ * otros tres quietos. Y el número importa: **con una, decidir es instantáneo.**
+ *
+ * Va en el mensaje del usuario, no en la instrucción de sistema, porque es un
+ * encargo de ESTA petición y no una regla permanente del investigador.
+ */
+export function encargoDePilar(pilar, cuantas = 1) {
+    const nombre = PILARES[pilar]?.label || pilar
+    const lineas = [
+        '',
+        'ENCARGO DIRIGIDO — ESTO MANDA SOBRE TODO LO ANTERIOR:',
+        `- Devuelve EXACTAMENTE ${cuantas} opcion(es) NUEVA(S). Ni una mas.`,
+        `- TODAS del pilar "${pilar}" (${nombre}). NINGUNA de los otros tres pilares.`,
+        '- No repitas nada de material_ya_recogido.',
+    ]
+
+    // SOLO la condicion del pilar que se pide. Las otras no vienen a cuento, y
+    // mandarlas seria ruido — ruido que el motor podria intentar cumplir.
+    // Cada pilar tiene SU condicion, y aqui se dice la suya y nada mas.
+    const CONDICION = {
+        anclaje_visible:
+            '- Cada opcion tiene que traer "ubicacion": DESDE DONDE SE VE. En una catedral NO SE TOCA NADA: la condicion es que este A LA VISTA desde el recorrido del visitante.',
+        apocrifo:
+            '- Cada opcion tiene que decir que fuente la sostiene y que deduccion oculta se le puede colgar. Sin fuente comprobable, "estado": "por_verificar".',
+        dualidad_gremios:
+            '- Cada opcion tiene que decir DONDE choca la autoridad que impone el dogma con los artifices que labran la materia. Si no hay conflicto, no es de este pilar.',
+        secreto_filosofico:
+            '- Cada opcion tiene que declarar "formulable_como": ontologica | fisica | politica. Nada sobrenatural.',
+    }
+    if (CONDICION[pilar]) lineas.push(CONDICION[pilar])
+
+    return lineas.join('\n')
+}
+
 /** El encargo de investigación, tal cual va al motor. */
-export function buildInvestigacionMensaje(catedral, { materialPrevio = [], notas = '' } = {}) {
+export function buildInvestigacionMensaje(
+    catedral,
+    { materialPrevio = [], notas = '', pilar = '', cuantas = 0 } = {},
+) {
+    const dirigido = pilar ? encargoDePilar(pilar, cuantas || 1) : ''
     return JSON.stringify({
         catedral: catedral?.nombre || '',
         ciudad: catedral?.ciudad || '',
@@ -83,7 +125,8 @@ export function buildInvestigacionMensaje(catedral, { materialPrevio = [], notas
             'Solo JSON valido. No inventes fuentes: si no puedes citarla, deja "fuente" vacio y "estado": "por_verificar". ' +
             'NO REPITAS nada de material_ya_recogido: esas opciones YA estan sobre la mesa y no sirven. ' +
             'Aporta opciones NUEVAS, y busca en otro sitio si hace falta: otras naves, otros siglos, otros soportes. ' +
-            'Si notas_del_disenador dice que algo no vale o pide otro tipo de material, OBEDECE esas notas: son el volante del diseñador.',
+            'Si notas_del_disenador dice que algo no vale o pide otro tipo de material, OBEDECE esas notas: son el volante del diseñador.' +
+            dirigido,
     })
 }
 
@@ -113,6 +156,8 @@ export async function investigarCatedral({
     catedral,
     materialPrevio = [],
     notas = '',
+    pilar = '',
+    cuantas = 0,
     signal,
 }) {
     const { provider = 'compatible', baseUrl, apiKey, model } = settings?.llm || {}
@@ -131,7 +176,7 @@ export async function investigarCatedral({
     // nivel de razonamiento, no el modelo.
     const modelo = model
 
-    const usuario = buildInvestigacionMensaje(catedral, { materialPrevio, notas })
+    const usuario = buildInvestigacionMensaje(catedral, { materialPrevio, notas, pilar, cuantas })
 
     if (provider === 'google') {
         const quiereBuscar = settings?.llm?.buscarWeb !== false

@@ -60,7 +60,12 @@ import {
     resumenMaterial,
     faltaDondeSeVe,
 } from '../src/domain/material.js'
-import { investigarCatedral, parseInvestigacion } from '../src/classifier/investigacion.js'
+import {
+    buildInvestigacionMensaje,
+    encargoDePilar,
+    investigarCatedral,
+    parseInvestigacion,
+} from '../src/classifier/investigacion.js'
 import {
     anclajesConMaterial,
     grafoDesdeMaterial,
@@ -819,6 +824,52 @@ ok(
 ok(
     faltaDondeSeVe(candidata) === '',
     'y a una opcion que no es anclaje no se le pide: cada pilar tiene su condicion',
+)
+
+// EL ENCARGO DIRIGIDO: «buscame UNA mas de ESTE pilar».
+// Pedir un lote de los cuatro trae un muro de candidatos y toca lo que ya
+// tenias. Pedir UNA de UN pilar es preciso, barato, y deja los otros tres
+// quietos. Con una, decidir es instantaneo.
+const encargoAnclaje = JSON.parse(
+    buildInvestigacionMensaje({ nombre: 'Valencia' }, { pilar: 'anclaje_visible', cuantas: 1 }),
+)
+ok(
+    encargoAnclaje.recordatorio.includes('EXACTAMENTE 1'),
+    'el encargo dirigido pide UNA sola, ni una mas',
+)
+ok(
+    encargoAnclaje.recordatorio.includes('anclaje_visible'),
+    'y pide SOLO ese pilar',
+)
+ok(
+    encargoAnclaje.recordatorio.includes('NINGUNA de los otros tres'),
+    'diciendo por escrito que los otros tres no se tocan',
+)
+ok(
+    encargoAnclaje.recordatorio.includes('A LA VISTA'),
+    'y le recuerda la condicion del pilar 1: en una catedral no se toca nada, la condicion es que se VEA',
+)
+const encargoNucleo = JSON.parse(
+    buildInvestigacionMensaje({ nombre: 'Valencia' }, { pilar: 'secreto_filosofico', cuantas: 1 }),
+)
+ok(
+    encargoNucleo.recordatorio.includes('formulable_como'),
+    'y al pilar 4 le recuerda que tiene que declarar como se formula: nada sobrenatural',
+)
+ok(
+    !encargoNucleo.recordatorio.includes('A LA VISTA'),
+    'sin arrastrar la condicion del pilar 1, que no es la suya: cada pilar tiene la suya',
+)
+const sinEncargo = JSON.parse(
+    buildInvestigacionMensaje({ nombre: 'Valencia' }, { notas: 'lo de siempre' }),
+)
+ok(
+    !sinEncargo.recordatorio.includes('ENCARGO DIRIGIDO'),
+    'sin pilar pedido NO se manda encargo dirigido: el boton global sigue pidiendo de los cuatro',
+)
+ok(
+    encargoDePilar('apocrifo', 3).includes('EXACTAMENTE 3'),
+    'y el encargo admite pedir mas de una, por si algun dia hace falta',
 )
 
 // Descartar no borra: marca. «No se tira nada.»

@@ -24,6 +24,7 @@ export default function PromptPanel({
     catedral,
     material,
     onInvestigar,
+    onInvestigarPilar,
     investigando,
     errorInvestigacion,
     avisoInvestigacion,
@@ -160,7 +161,6 @@ export default function PromptPanel({
                     <div className="space-y-4 p-4">
                         {Object.entries(PILARES).map(([clave, pilar]) => {
                             const delPilar = vivas.filter((o) => o.pilar === clave)
-                            if (!delPilar.length) return null
                             return (
                                 <div key={clave}>
                                     <div className="mb-1.5 flex items-center gap-1.5">
@@ -171,21 +171,40 @@ export default function PromptPanel({
                                         <span className="font-mono text-[10px] text-slate-500">
                                             {delPilar.length}
                                         </span>
+                                        {/* PIDE UNA MÁS, SOLO DE ESTE PILAR. No toca los
+                                            otros tres, y está aunque el pilar esté
+                                            vacío: es cuando más falta hace. */}
+                                        <button
+                                            type="button"
+                                            data-pedir-pilar={clave}
+                                            onClick={() => onInvestigarPilar?.(clave, notas)}
+                                            disabled={investigando}
+                                            title={`Buscar una más de ${pilar.label}`}
+                                            className="ml-auto rounded-md border border-ink-700 px-1.5 py-0.5 font-mono text-[11px] leading-none text-slate-400 transition-colors hover:border-aura-cyan/60 hover:text-aura-cyan disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            ＋
+                                        </button>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        {delPilar.map((o) => (
-                                            <TarjetaOpcion
-                                                key={o.id}
-                                                opcion={o}
-                                                tieneGrafo={Boolean(tieneGrafo?.(o.id))}
-                                                activo={anclajeActivo === o.id}
-                                                onVerGrafo={() => onVerGrafo?.(o.id)}
-                                                onDocumentar={onDocumentar}
-                                                onDesdocumentar={onDesdocumentar}
-                                                onDescartar={onDescartar}
-                                            />
-                                        ))}
-                                    </div>
+                                    {delPilar.length === 0 ? (
+                                        <p className="rounded-xl border border-dashed border-ink-700/60 px-3 py-2 text-[11px] text-slate-500">
+                                            Nada todavía en este pilar. Pulsa ＋ para pedir una.
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            {delPilar.map((o) => (
+                                                <TarjetaOpcion
+                                                    key={o.id}
+                                                    opcion={o}
+                                                    tieneGrafo={Boolean(tieneGrafo?.(o.id))}
+                                                    activo={anclajeActivo === o.id}
+                                                    onVerGrafo={() => onVerGrafo?.(o.id)}
+                                                    onDocumentar={onDocumentar}
+                                                    onDesdocumentar={onDesdocumentar}
+                                                    onDescartar={onDescartar}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })}
