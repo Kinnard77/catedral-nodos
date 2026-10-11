@@ -16,7 +16,7 @@ import { texto } from '../domain/elemento.js'
  * suelo que pisa.
  */
 
-export const SYSTEM_MISTERIOS = `Eres el motor de diseno de una AVENTURA DE INVESTIGACION CON TRAMA que se juega con el movil dentro de una catedral real. El jugador es un turista al que la trama convierte en investigador de ultima hora. La referencia de tono es El Codigo Da Vinci.
+export const SYSTEM_MISTERIOS = `Eres el motor de diseno de una AVENTURA DE INVESTIGACION CON TRAMA que se juega con el movil dentro de una catedral real. El jugador es un turista al que la trama convierte en investigador de ultima hora. Las referencias de tono son El Codigo Da Vinci y El nombre de la rosa.
 
 NO es un juego didactico ni un trivial. No vale un dato que se pueda consultar: vale una IDEA que cambia lo que el jugador ya habia visto.
 
@@ -69,6 +69,67 @@ export function buildMaterialMensaje(catedral, elementos = []) {
 }
 
 /**
+ * LA SEGUNDA PASADA: la herramienta no RECHAZA, RESUELVE.
+ *
+ * Un candidato que no pasa no se tira: se le dice al motor EXACTAMENTE que le
+ * falta y se le pide que lo arregle, con el material delante para que pueda
+ * anclarlo. Es la diferencia entre un corrector que tacha y uno que corrige:
+ * si falta el material se busca, si falta el titulo se propone, y si falta la
+ * relectura se escribe. Para eso esta la investigacion.
+ */
+export const SYSTEM_REPARACION = `Recibes candidatos a misterio RECHAZADOS, con el MOTIVO exacto del rechazo, y el MATERIAL real disponible.
+
+Tu trabajo NO es proponer misterios nuevos: es ARREGLAR estos, uno a uno, para que pasen. Devuelve los mismos, arreglados.
+
+Como se arregla cada motivo:
+- "no se apoya en ningun elemento del material": vuelve a anclarlo. En "sostienen" pon los "id" EXACTOS de material_disponible. Anclar es obligatorio: un misterio sin material no existe.
+- "le falta titulo o descubrimiento": escribelos. El descubrimiento tiene que ser una IDEA, no un objeto ni un sitio.
+- "no tiene relectura": escribela. Que pieza que el turista YA VIO al entrar cambia de significado al final.
+- Si el motivo es otro, arreglalo igual.
+
+Reglas que no cambian: nunca inventes un "id"; el descubrimiento final tiene que ASOMBRAR — el jugador piensa "eso no lo habia pensado asi".
+
+Las referencias de tono son El Codigo Da Vinci y El nombre de la rosa.
+
+Responde UNICAMENTE con el mismo JSON de misterios, con los candidatos arreglados:
+{
+  "misterios": [
+    { "titulo": "...", "descubrimiento": "...", "encaje": "...", "relectura": "...", "sostienen": ["id-del-elemento"], "duda": "..." }
+  ]
+}`
+
+/** El encargo de reparacion, tal cual va al motor. */
+export function buildReparacionMensaje(catedral, elementos = [], rechazados = []) {
+    return JSON.stringify({
+        catedral: catedral?.nombre || '',
+        material_disponible: elementos.map((e) => ({
+            id: e.id,
+            que_es: texto(e, 'nombre'),
+            tipo: e.tipo,
+            categoria: e.categoria,
+        })),
+        candidatos_rechazados: rechazados.map((r) => ({
+            motivo: r.motivo,
+            candidato: r.bruto || { titulo: r.titulo },
+        })),
+        recordatorio:
+            'Arregla EXACTAMENTE el motivo de cada uno. En "sostienen" solo id de material_disponible. Solo JSON valido.',
+    })
+}
+
+/** Junta lo bueno de la primera pasada con lo que se arreglo en la segunda. */
+export function fusionarReparacion(primera, segunda) {
+    return {
+        candidatos: [...primera.candidatos, ...segunda.candidatos],
+        rechazados: segunda.rechazados,
+        idsInventados: primera.idsInventados + segunda.idsInventados,
+        total: primera.total + segunda.total,
+        reparados: segunda.candidatos.length,
+        sinArreglar: segunda.rechazados.length,
+    }
+}
+
+/**
  * Pide misterios al motor y los sanea contra el material.
  * Lanza si no hay clave: el motor local no sabe inventar, y fingirlo seria peor
  * que decirlo.
@@ -97,7 +158,31 @@ export async function proponerMisterios({ settings, catedral, elementos, signal 
     })
 
     const saneado = parseMisterios(extractJson(content), elementos)
-    return { ...saneado, usage, model }
+
+    // SEGUNDA PASADA: lo que no pasa no se tira, se arregla.
+    if (!saneado.rechazados.length) return { ...saneado, usage, model }
+
+    try {
+        const { content: arreglo, usage: usageArreglo } = await callChatCompletions({
+            baseUrl,
+            apiKey,
+            model,
+            messages: [
+                { role: 'system', content: SYSTEM_REPARACION },
+                {
+                    role: 'user',
+                    content: buildReparacionMensaje(catedral, elementos, saneado.rechazados),
+                },
+            ],
+            jsonMode: soportaJsonMode(baseUrl),
+            signal,
+        })
+        const segunda = parseMisterios(extractJson(arreglo), elementos)
+        return { ...fusionarReparacion(saneado, segunda), usage: usageArreglo || usage, model }
+    } catch (e) {
+        // Si la reparacion falla, NO se pierde lo que ya estaba bien.
+        return { ...saneado, usage, model, avisoReparacion: e.message }
+    }
 }
 
 /**
@@ -118,6 +203,8 @@ export function parseMisterios(raw, elementos = []) {
         if (!m.valido || m.sinSosten) {
             rechazados.push({
                 titulo: m.textos.es.titulo || '(sin titulo)',
+                // Se guarda el candidato CRUDO: sin el no se puede reparar.
+                bruto,
                 // Se dice lo mas basico primero: si falta el titulo, eso es lo
                 // que hay que arreglar, aunque falten tambien las demas cosas.
                 motivo: m.sinSosten

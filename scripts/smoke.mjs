@@ -39,7 +39,7 @@ import {
     resumenElementos,
     texto,
 } from '../src/domain/elemento.js'
-import { parseMisterios, proponerMisterios } from '../src/classifier/misterios.js'
+import { parseMisterios, proponerMisterios, buildReparacionMensaje, fusionarReparacion } from '../src/classifier/misterios.js'
 import { soloConReal } from '../src/domain/misterio.js'
 import {
     CLAVES_GNIEC,
@@ -534,6 +534,51 @@ ok(
     sinRelectura.rechazados[0]?.motivo.includes('relectura'),
     'y se dice por que: no tiene relectura, solo un dato',
 )
+
+// LA SEGUNDA PASADA: lo que no pasa NO SE TIRA, SE ARREGLA. La herramienta no
+// es un corrector que tacha, es uno que corrige: si falta el material se busca,
+// si falta el titulo se propone, y si falta la relectura se escribe.
+const encargo = JSON.parse(
+    buildReparacionMensaje({ nombre: 'Valencia' }, material, sinRelectura.rechazados),
+)
+ok(
+    encargo.candidatos_rechazados.length === 1,
+    'el candidato que fallo se le devuelve al motor para arreglarlo',
+)
+ok(
+    encargo.candidatos_rechazados[0].motivo.includes('relectura'),
+    'y se le dice EXACTAMENTE que le falta',
+)
+ok(
+    encargo.candidatos_rechazados[0].candidato.titulo === 'El dato que no asombra',
+    'con el candidato crudo dentro, que sin el no se puede reparar',
+)
+ok(
+    encargo.material_disponible.some((m) => m.id === 'e-real'),
+    'y con el material delante, para que pueda volver a anclarlo',
+)
+
+const junta = fusionarReparacion(
+    saneado,
+    parseMisterios(
+        {
+            misterios: [
+                {
+                    titulo: 'El dato que no asombra',
+                    descubrimiento: 'El jugador descubre que la losa que piso era una firma.',
+                    encaje: 'Encaja aqui.',
+                    relectura: 'La losa del suelo no era un suelo: era una firma.',
+                    sostienen: ['e-real'],
+                    duda: '¿Sera verdad?',
+                },
+            ],
+        },
+        material,
+    ),
+)
+ok(junta.candidatos.length === 2, 'lo bueno de la primera pasada NO se pierde al reparar')
+ok(junta.reparados === 1, 'y se cuenta lo que se arreglo')
+ok(junta.sinArreglar === 0, 'y lo que sigue sin arreglarse')
 
 // Ni sin clave ni sin material: fingir que el motor puede seria peor que decirlo.
 let falloClave = ''

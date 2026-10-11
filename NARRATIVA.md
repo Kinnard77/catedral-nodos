@@ -12,6 +12,9 @@ Los otros tres documentos siguen siendo válidos para lo suyo:
 - [`README.md`](README.md) — cómo se arranca y cómo está montado el código.
 - [`PDC.md`](PDC.md) — **el análisis del grafo**: los ejes que faltan, la regla del final, el
   arrastre de cada nodo y las cuatro condiciones de integridad.
+- [`MANUAL.md`](MANUAL.md) — **cómo se opera el panel, paso a paso**, con lo que hay que ver en
+  cada paso para saber que se avanza.
+- [`REVISION.md`](REVISION.md) — qué tiene y qué le falta a la herramienta, leído del código.
 
 ---
 
@@ -22,8 +25,10 @@ catedral **siendo turista real**. No es una audioguía: es lo que hace que el tu
 entienda cosas que sin el juego no vería**.
 
 - Se juega **en el móvil, dentro de la catedral**, y el juego comprueba que estás allí.
-- La referencia de tono es ***El Código Da Vinci***: interpretación artística de lo real,
-  personajes, y un «¿será verdad?» final que **nunca se confirma**.
+- Las referencias de tono son ***El Código Da Vinci*** —interpretación artística de lo real,
+  personajes, y un «¿será verdad?» final que **nunca se confirma**— y ***El nombre de la rosa***,
+  de Umberto Eco: el misterio que se resuelve **leyendo signos**, y un desenlace que es una
+  relectura de lo que ya estaba a la vista.
 - **No es una cadena de puzles y acertijos.** Los puzles existen para contar el final.
 - **Lo primero es la trama**: la historia, los personajes y el misterio. Sin ellos no hay
   emoción.
