@@ -463,7 +463,13 @@ export function useAcademy({ viewport = null } = {}) {
     const verGrafoDe = useCallback(
         (anclajeId) => {
             const catedralId = premisa?.catedralId
-            const lecciones = leccionesDesdeMaterial(material, anclajeId, catedralId)
+            // SIN TRUCOS: la cadena la declara el MISTERIO elegido (su
+            // `sostienen`), no el programa rebuscando en todo el material de la
+            // catedral. Sin misterio elegido, el grafo es el anclaje y se ve el
+            // hueco — que es la verdad.
+            const misterio =
+                catedralActiva?.misterios?.find((m) => m.id === premisa?.misterioId) || null
+            const lecciones = leccionesDesdeMaterial(material, anclajeId, catedralId, misterio)
             if (!lecciones.length) return null
 
             setAnclajeActivo(anclajeId)
@@ -489,7 +495,7 @@ export function useAcademy({ viewport = null } = {}) {
             })
             return lecciones
         },
-        [material, premisa, catalogo.lessons],
+        [material, premisa, catalogo.lessons, catedralActiva],
     )
 
     /**
@@ -498,7 +504,11 @@ export function useAcademy({ viewport = null } = {}) {
      */
     const tieneGrafoDeAnclaje = useCallback(
         (anclajeId) => {
-            return tieneFinal(grafoDesdeMaterial(material, anclajeId, premisa?.catedralId))
+            // El anclaje puede abrir su grafo porque ES un grafo, aunque de
+            // momento sea solo el y no tenga final. Apagarlo obligaria a elegir
+            // misterio a ciegas: el diseñador tiene que poder abrirlo y VER el
+            // hueco («todavia no hay cadena ni final»).
+            return grafoDesdeMaterial(material, anclajeId, premisa?.catedralId).length > 0
         },
         [material, premisa],
     )

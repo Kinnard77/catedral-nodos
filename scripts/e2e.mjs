@@ -345,9 +345,14 @@ try {
     const nodosLienzo = await evaluar(
         `[...document.querySelectorAll('[data-node-id]')].map((n) => n.getAttribute('data-node-id'))`,
     )
+    // SIN MISTERIO NO HAY CADENA. La herramienta ya no rellena el grafo con
+    // «una opcion de cada clase» de cualquier sitio del material: eso producia
+    // cadenas falsas. La cadena la declara el `sostienen` del misterio elegido,
+    // y aqui todavia no hay ninguno, asi que el lienzo enseña el hueco.
+    // (El caso CON misterio que declara la cadena lo cubre `npm test`.)
     ok(
-        nodosLienzo.includes('FIL-01'),
-        `y abre por el FINAL: el nucleo filosofico del material (${nodosLienzo.join(', ')})`,
+        nodosLienzo.length === 1 && nodosLienzo.includes('ANC-01'),
+        `y sin misterio elegido el lienzo enseña el hueco: el anclaje y nada mas (${nodosLienzo.join(', ')})`,
     )
     ok(
         !(await texto()).includes('no-ser'),

@@ -1713,8 +1713,31 @@ ok(
 )
 ok(anclajesConMaterial([...materialPrueba, op('ANC-99', 'anclaje', 'anclaje_visible', { descartado: true })], V).length === 1, 'y uno descartado no')
 
-const grafoPuente = grafoDesdeMaterial(materialPrueba, 'ANC-01', V)
-ok(grafoPuente.length === 5, `el grafo sale del material entero (${grafo.length} nodos)`)
+// SIN MISTERIO NO HAY CADENA. La herramienta no se la inventa: enseña el hueco.
+const sinMisterio = grafoDesdeMaterial(materialPrueba, 'ANC-01', V)
+ok(
+    sinMisterio.length === 1,
+    `sin misterio elegido el grafo es el anclaje y nada mas (${sinMisterio.length} nodos)`,
+)
+ok(!tieneFinal(sinMisterio), 'y sin final: todavia no hay nada que disenar hacia atras')
+
+// LA CADENA LA DECLARA EL MISTERIO (su `sostienen`), no el programa.
+const misterioCadena = {
+    id: 'mis-cadena',
+    sostienen: ['ANC-01', 'EPI-01', 'LIN-01', 'RH-01', 'FIL-01'],
+}
+const grafoPuente = grafoDesdeMaterial(materialPrueba, 'ANC-01', V, misterioCadena)
+ok(grafoPuente.length === 5, `con el misterio delante el grafo sale de SU cadena (${grafoPuente.length} nodos)`)
+
+// Y LO QUE EL MISTERIO NO DECLARA, NO ENTRA. Esto es lo que antes era un truco:
+// el grafo se rellenaba con «una opcion de cada clase» de CUALQUIER sitio del
+// material, y por eso un anclaje sobre las cadenas de Marsella terminaba en un
+// nucleo filosofico de otra tarjeta.
+const misterioCorto = { id: 'mis-corto', sostienen: ['ANC-01', 'EPI-01', 'FIL-01'] }
+const grafoCorto = grafoDesdeMaterial(materialPrueba, 'ANC-01', V, misterioCorto)
+ok(grafoCorto.length === 3, `y lo que el misterio NO declara se queda fuera (${grafoCorto.length} nodos)`)
+ok(!grafoCorto.some((n) => n.id === 'LIN-01'), 'el calambur de otra tarjeta ya NO se cuela en esta cadena')
+ok(!grafoCorto.some((n) => n.id === 'RH-01'), 'ni el arenque de otra tarjeta')
 ok(grafoPuente[0].tipo === 'anchor' && grafoPuente[0].prereq.length === 0, 'la piedra es la raiz y no depende de nada')
 ok(
     grafoPuente.find((n) => n.id === 'EPI-01').prereq.join() === 'ANC-01',
@@ -1746,9 +1769,11 @@ ok(
     'y la RUTA PRINCIPAL termina en la piedra: lo ultimo que se disena es lo que se ve',
 )
 
-// Sin nucleo filosofico no hay final, y por tanto no hay nada que disenar.
-const sinFinal = grafoDesdeMaterial(materialPrueba.filter((o) => o.id !== 'FIL-01'), 'ANC-01', V)
-ok(sinFinal.length === 4, 'sin secreto filosofico el grafo se queda sin final')
+// Sin nucleo filosofico EN LA CADENA no hay final, y sin final no hay nada que
+// disenar hacia atras.
+const misterioSinNucleo = { id: 'mis-sin-nucleo', sostienen: ['ANC-01', 'EPI-01', 'LIN-01', 'RH-01'] }
+const sinFinal = grafoDesdeMaterial(materialPrueba, 'ANC-01', V, misterioSinNucleo)
+ok(sinFinal.length === 4, 'sin secreto filosofico en la cadena el grafo se queda sin final')
 ok(!tieneFinal(sinFinal), 'y se dice: sin final no hay grafo que disenar')
 ok(grafoDesdeMaterial(materialPrueba, 'NO-EXISTE', V).length === 0, 'un anclaje inventado no da grafo')
 

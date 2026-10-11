@@ -59,16 +59,24 @@ function comoNodo(opcion, tipo, prereq, extra = {}) {
 }
 
 /**
- * El grafo de un anclaje, montado con el material de su catedral.
+ * El grafo de un anclaje, montado con el material DE SU CADENA.
  *
- * Devuelve la lista de nodos con sus prerrequisitos ya encadenados. El nodo del
- * nucleo filosofico lleva `ancla: true`, porque ES el final: el diseno empieza
- * por el y se camina hacia atras.
+ * SIN TRUCOS. Antes esta funcion rellenaba el grafo cogiendo "una opcion de
+ * cada clase" de CUALQUIER sitio del material de la catedral, y el final era el
+ * primer `secreto_filosofico` que encontrara. Eso producia cadenas falsas: un
+ * anclaje sobre las cadenas del puerto de Marsella terminaba en un nucleo
+ * filosofico de otra tarjeta que no tenia nada que ver.
  *
- * Si no hay nucleo filosofico, NO hay final, y por tanto no hay grafo que
- * disenar: se devuelve lo que haya, sin final, para que se vea el hueco.
+ * Ahora la cadena sale del UNICO sitio donde el diseñador ha declarado que unas
+ * piezas van juntas: **el `sostienen` del misterio elegido**. Si no hay misterio
+ * elegido, o el anclaje no esta entre sus sostenes, el grafo es el anclaje y
+ * nada mas — y sin nucleo filosofico en la cadena, NO HAY FINAL.
+ *
+ * Eso no es un fallo: es el hueco a la vista. El misterio existe justo para
+ * declarar la cadena. Si no la declara, la herramienta lo dice en vez de
+ * inventarsela.
  */
-export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId) {
+export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId, misterio = null) {
     const vivas = opciones.filter(
         (o) => !o.descartado && (!catedralId || o.catedralId === catedralId),
     )
@@ -76,13 +84,17 @@ export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId) {
     if (!anclaje) return []
 
     const nodos = [comoNodo(anclaje, 'anchor', [])]
+
+    // La cadena es SOLO lo que el misterio declara que lo sostiene.
+    const sostienen = Array.isArray(misterio?.sostienen) ? misterio.sostienen : []
+    const deLaCadena = vivas.filter((o) => o.id !== anclajeId && sostienen.includes(o.id))
     const buscar = (clase, pilar) =>
-        vivas.find((o) => o.clase === clase && (!pilar || o.pilar === pilar) && o.id !== anclajeId)
+        deLaCadena.find((o) => o.clase === clase && (!pilar || o.pilar === pilar))
 
     const epigrafia = buscar('epigrafia')
     const linguistica = buscar('linguistica')
     const arenque = buscar('dato_curioso', 'dualidad_gremios')
-    const nucleo = vivas.find((o) => o.pilar === 'secreto_filosofico' && o.id !== anclajeId)
+    const nucleo = deLaCadena.find((o) => o.pilar === 'secreto_filosofico')
 
     // La ruta que lee la piedra: anclaje -> epigrafia -> calambur.
     if (epigrafia) nodos.push(comoNodo(epigrafia, 'epigraphy', [anclaje.id]))
@@ -122,12 +134,12 @@ export function tieneFinal(nodos = []) {
  * `deAnclaje` deja claro de que piedra sale cada nodo, para poder reemplazar el
  * grafo de un anclaje sin tocar el de los demas.
  */
-export function leccionesDesdeMaterial(opciones = [], anclajeId, catedralId) {
+export function leccionesDesdeMaterial(opciones = [], anclajeId, catedralId, misterio = null) {
     // EN ORDEN DE DISENO, y eso no es cosmetico: el lienzo abre por el PRIMER
     // elemento de la lista, asi que el primero tiene que ser EL FINAL —el nucleo
     // filosofico—. Si se pasaran en orden de recorrido, el grafo abriria por la
     // piedra y el diseno iria al reves de como manda el metodo.
-    return ordenDeDiseno(grafoDesdeMaterial(opciones, anclajeId, catedralId)).map((nodo) => ({
+    return ordenDeDiseno(grafoDesdeMaterial(opciones, anclajeId, catedralId, misterio)).map((nodo) => ({
         id: nodo.id,
         // `lessonId` es lo que el motor del grafo usa para encadenar los pasos.
         lessonId: nodo.id,
