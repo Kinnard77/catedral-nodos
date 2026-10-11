@@ -79,7 +79,10 @@ export function buildInvestigacionMensaje(catedral, { materialPrevio = [], notas
         })),
         notas_del_disenador: notas,
         recordatorio:
-            'Solo JSON valido. No inventes fuentes: si no puedes citarla, deja "fuente" vacio y "estado": "por_verificar".',
+            'Solo JSON valido. No inventes fuentes: si no puedes citarla, deja "fuente" vacio y "estado": "por_verificar". ' +
+            'NO REPITAS nada de material_ya_recogido: esas opciones YA estan sobre la mesa y no sirven. ' +
+            'Aporta opciones NUEVAS, y busca en otro sitio si hace falta: otras naves, otros siglos, otros soportes. ' +
+            'Si notas_del_disenador dice que algo no vale o pide otro tipo de material, OBEDECE esas notas: son el volante del diseñador.',
     })
 }
 

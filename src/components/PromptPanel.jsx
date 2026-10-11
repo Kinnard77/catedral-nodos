@@ -102,7 +102,7 @@ export default function PromptPanel({
                             value={notas}
                             onChange={(e) => setNotas(e.target.value)}
                             rows={2}
-                            placeholder="Notas para la investigación: qué sabes ya, qué quieres que mire (opcional)"
+                            placeholder="Para pedir MÁS: di qué no te sirve y qué buscas. Ej. «ninguna me sirve para misterio, dame otra cosa» (opcional)"
                             className="sin-scrollbar mb-2 w-full resize-none rounded-xl border border-ink-700 bg-ink-950/70 px-3 py-2 text-[12px] leading-relaxed text-slate-100 placeholder:text-slate-500 focus:border-aura-cyan/70 focus:outline-none"
                         />
 
@@ -124,6 +124,14 @@ export default function PromptPanel({
                             La investigación trae candidatos. Nada entra como documentado sin una fuente
                             que lo sostenga.
                         </p>
+                        {material.length > 0 && (
+                            <p className="mt-1.5 text-[10.5px] leading-relaxed text-slate-500">
+                                Si ninguna te sirve,{' '}
+                                <span className="text-slate-300">vuelve a investigar</span>: el motor
+                                recibe lo que YA tienes y se le piden opciones nuevas, buscando en otro
+                                sitio. Las notas de arriba son el volante.
+                            </p>
+                        )}
 
                         {errorInvestigacion && (
                             <div className="mt-2 rounded-xl border border-aura-rose/50 bg-aura-rose/10 px-3 py-2 text-[11px] leading-relaxed text-aura-rose">
