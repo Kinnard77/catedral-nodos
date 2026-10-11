@@ -16,7 +16,9 @@ import { texto } from '../domain/elemento.js'
  * suelo que pisa.
  */
 
-export const SYSTEM_MISTERIOS = `Eres el motor de diseno de un juego didactico de misterio que se juega con el movil dentro de una catedral real. El jugador es un turista que hace el recorrido que le proponemos.
+export const SYSTEM_MISTERIOS = `Eres el motor de diseno de una AVENTURA DE INVESTIGACION CON TRAMA que se juega con el movil dentro de una catedral real. El jugador es un turista al que la trama convierte en investigador de ultima hora. La referencia de tono es El Codigo Da Vinci.
+
+NO es un juego didactico ni un trivial. No vale un dato que se pueda consultar: vale una IDEA que cambia lo que el jugador ya habia visto.
 
 Recibes el MATERIAL que hemos recolectado de una catedral concreta, separado en elementos REALES (documentados, con fuente) y elementos INVENTADOS O MODIFICADOS. Tu trabajo es proponer MISTERIOS que convenga trabajar en ESA catedral.
 
@@ -30,15 +32,22 @@ Para cada misterio devuelve:
 - "titulo": corto y con gancho, sin signos de interrogacion.
 - "descubrimiento": que descubre el jugador exactamente, en dos o tres frases.
 - "encaje": por que este misterio le corresponde a ESTA catedral y no a otra.
+- "relectura": LA PIEZA QUE SE RELEE. Que cosa que el turista YA VIO al entrar cambia de significado cuando llega al final. Es el campo mas importante de todos.
 - "sostienen": array de ids de elementos del material. Como minimo uno, y mejor dos o mas.
 - "duda": la pregunta que le queda al jugador al final. El juego no la responde.
+
+LA RELECTURA MANDA SOBRE TODO LO DEMAS:
+5. El descubrimiento final tiene que ser una IDEA, no un objeto ni un sitio. "El Grial es el simbolo de lo femenino y representa una descendencia" es una idea. "El Grial esta en Valencia" NO es una idea: es un dato, y un dato no asombra a nadie.
+6. Tiene que producir ASOMBRO: el jugador piensa "eso no lo habia pensado asi".
+7. Lo que se relee tiene que salir del material de la columna 1 (anclaje_visible): algo que YA esta a la vista y que el turista miro sin saber leerlo.
+8. Si un misterio no tiene relectura, no lo propongas.
 
 Propon entre 3 y 5 misterios, ordenados del que mejor encaja al que peor.
 
 Responde UNICAMENTE con un objeto JSON valido con esta forma exacta:
 {
   "misterios": [
-    { "titulo": "...", "descubrimiento": "...", "encaje": "...", "sostienen": ["id-del-elemento"], "duda": "..." }
+    { "titulo": "...", "descubrimiento": "...", "encaje": "...", "relectura": "...", "sostienen": ["id-del-elemento"], "duda": "..." }
   ]
 }`
 
@@ -109,9 +118,15 @@ export function parseMisterios(raw, elementos = []) {
         if (!m.valido || m.sinSosten) {
             rechazados.push({
                 titulo: m.textos.es.titulo || '(sin titulo)',
+                // Se dice lo mas basico primero: si falta el titulo, eso es lo
+                // que hay que arreglar, aunque falten tambien las demas cosas.
                 motivo: m.sinSosten
                     ? 'no se apoya en ningun elemento del material'
-                    : 'le falta titulo o descubrimiento',
+                    : !m.textos.es.titulo || !m.textos.es.descubrimiento
+                      ? 'le falta titulo o descubrimiento'
+                      : m.sinRelectura
+                        ? 'no tiene relectura: sin ella no hay desenlace, solo un dato'
+                        : 'no pasa la validacion',
             })
             continue
         }

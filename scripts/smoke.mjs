@@ -472,6 +472,7 @@ const respuestaDelMotor = {
             titulo: 'La firma que nadie leyo',
             descubrimiento: 'El jugador descubre que la inscripcion es una firma.',
             encaje: 'Solo tiene sentido en este coro.',
+            relectura: 'La losa que piso al entrar no era un suelo: era una firma.',
             sostienen: ['e-real', 'e-inv'],
             duda: '¿Sera verdad?',
         },
@@ -480,10 +481,11 @@ const respuestaDelMotor = {
             titulo: 'El grial escondido',
             descubrimiento: 'El jugador encuentra el grial.',
             encaje: 'Valdria para cualquier catedral.',
+            relectura: 'La copa del retablo.',
             sostienen: ['e-que-no-existe'],
             duda: '¿Sera verdad?',
         },
-        { titulo: 'Sin nada', descubrimiento: '', sostienen: ['e-real'], duda: '' },
+        { titulo: 'Sin nada', descubrimiento: '', relectura: '', sostienen: ['e-real'], duda: '' },
     ],
 }
 const saneado = parseMisterios(respuestaDelMotor, material)
@@ -509,6 +511,28 @@ ok(
 ok(
     saneado.candidatos[0].textos.es.titulo === 'La firma que nadie leyo',
     'el misterio se guarda por idioma, como los elementos',
+)
+
+// LA PUERTA DEL DESENLACE: un misterio sin relectura es un dato, y un dato no
+// asombra a nadie. Aunque se apoye en el material y tenga titulo, no se cierra.
+const sinRelectura = parseMisterios(
+    {
+        misterios: [
+            {
+                titulo: 'El dato que no asombra',
+                descubrimiento: 'El jugador encuentra el grial en la capilla.',
+                encaje: 'Encaja aqui.',
+                sostienen: ['e-real'],
+                duda: '¿Sera verdad?',
+            },
+        ],
+    },
+    material,
+)
+ok(sinRelectura.candidatos.length === 0, 'sin relectura no hay candidato: el desenlace no se cierra')
+ok(
+    sinRelectura.rechazados[0]?.motivo.includes('relectura'),
+    'y se dice por que: no tiene relectura, solo un dato',
 )
 
 // Ni sin clave ni sin material: fingir que el motor puede seria peor que decirlo.

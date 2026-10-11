@@ -17,8 +17,14 @@
 
 import { IDIOMA_BASE } from './elemento.js'
 
-/** Los campos de un misterio, tal como los devuelve el motor. */
-export const CAMPOS = ['titulo', 'descubrimiento', 'encaje', 'duda']
+/**
+ * Los campos de un misterio, tal como los devuelve el motor.
+ *
+ * `relectura` es lo que separa un DESENLACE de una ficha. Dice **que pieza que
+ * el turista YA VIO al entrar cambia de significado cuando llega al final**.
+ * Sin relectura no hay asombro; y sin asombro, el juego no vale.
+ */
+export const CAMPOS = ['titulo', 'descubrimiento', 'encaje', 'relectura', 'duda']
 
 /**
  * Sanea un candidato del motor contra el material real.
@@ -33,6 +39,7 @@ export function normalizarMisterio(raw, elementos = []) {
 
     const titulo = String(raw?.titulo || '').trim()
     const descubrimiento = String(raw?.descubrimiento || '').trim()
+    const relectura = String(raw?.relectura || '').trim()
 
     return {
         id: `mis-${slug(titulo) || 'misterio'}`,
@@ -41,6 +48,7 @@ export function normalizarMisterio(raw, elementos = []) {
                 titulo,
                 descubrimiento,
                 encaje: String(raw?.encaje || '').trim(),
+                relectura,
                 duda: String(raw?.duda || '').trim(),
             },
         },
@@ -49,7 +57,16 @@ export function normalizarMisterio(raw, elementos = []) {
         // poder decir en voz alta que el motor se pasó de la raya.
         inventados: pedidos.filter((id) => !existentes.has(id)),
         sinSosten: sostienen.length === 0,
-        valido: Boolean(titulo) && Boolean(descubrimiento) && sostienen.length > 0,
+        /**
+         * LA PUERTA DEL DESENLACE. Un misterio sin relectura es un dato, y un
+         * dato no asombra. No se puede cerrar el desenlace sin ella.
+         */
+        sinRelectura: relectura.length === 0,
+        valido:
+            Boolean(titulo) &&
+            Boolean(descubrimiento) &&
+            Boolean(relectura) &&
+            sostienen.length > 0,
         elegidoEn: null,
     }
 }

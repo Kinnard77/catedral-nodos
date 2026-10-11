@@ -124,6 +124,18 @@ export default function Misterios({
                                         {textoMisterio(c, 'descubrimiento')}
                                     </p>
 
+                                    {/* LA RELECTURA: el campo que convierte esto en
+                                        un desenlace. Va destacado porque es el que
+                                        decide si el misterio asombra o solo informa. */}
+                                    {textoMisterio(c, 'relectura') && (
+                                        <p className="mt-2 rounded-md border-l-2 border-aura-cyan/70 bg-aura-cyan/5 py-1.5 pl-2.5 text-[11.5px] leading-relaxed text-slate-200">
+                                            <span className="font-semibold text-aura-cyan">
+                                                Lo que se relee:{' '}
+                                            </span>
+                                            {textoMisterio(c, 'relectura')}
+                                        </p>
+                                    )}
+
                                     {textoMisterio(c, 'encaje') && (
                                         <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-400">
                                             <span className="text-slate-500">Por qué aquí: </span>
