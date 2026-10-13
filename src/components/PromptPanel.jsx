@@ -569,7 +569,13 @@ function Ayuda({ texto }) {
             >
                 ?
             </span>
-            <span className="pointer-events-none absolute left-0 top-[18px] z-40 hidden w-[300px] rounded-xl border border-ink-600 bg-ink-950/98 p-2.5 text-[10.5px] font-normal normal-case leading-relaxed tracking-normal text-slate-200 shadow-2xl group-hover:block group-focus-within:block">
+            <span className="pointer-events-none absolute left-0 top-[19px] z-50 hidden w-[310px] rounded-xl border-2 p-3 text-[11px] font-normal normal-case leading-relaxed tracking-normal shadow-2xl group-hover:block group-focus-within:block"
+                style={{
+                    backgroundColor: '#0a0e18',
+                    borderColor: '#3b4a66',
+                    color: '#e2e8f0',
+                    boxShadow: '0 18px 40px rgba(0,0,0,0.85)',
+                }}>
                 {texto}
             </span>
         </span>
