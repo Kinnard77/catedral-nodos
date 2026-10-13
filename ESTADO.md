@@ -53,6 +53,26 @@ Reproducción: **no hay**. Sin pasos ni frecuencia. **Primera tarea de mañana:
 reproducirlo antes de tocar nada** — y si no se reproduce, preguntarle qué estaba
 haciendo cuando pasó.
 
+### IDEA, para pensar: DOS VERSIONES
+El diseñador propone sacar **dos versiones**: la normal (conspirativa, mercado
+universal) y una **sesgada (católica)** para quien no quiere conspiraciones.
+Análisis completo en **DOS-VERSIONES.md**. En corto:
+
+- **El método ya lo permite casi gratis**: de los cinco nodos de la cadena, **solo
+  el final (Φ) lleva ideología**. La piedra, la inscripción y su lectura son hechos.
+- Y le da otra vuelta al 80/20: **el 80% es lo que COMPARTEN las dos versiones; el
+  20% es lo que las DIFERENCIA.** Razón de peso para que el 80% sea real.
+- **Lo que hay que hacer en el código, y mejora el diseño actual aunque nunca se
+  haga la segunda versión: SEPARAR EL MATERIAL DE LA LECTURA.** El material,
+  neutro; la versión, en el final y en la lectura.
+- **Y lo que hay que decidir**: ¿es un interruptor (mismo juego, otro final) o un
+  **derivado** (misma investigación, otro juego)? Mi opinión: derivado, porque lo
+  caro es el MAPEO y sirve para las dos.
+
+**NO construido. Es una idea.**
+
+---
+
 ### Pendientes, en orden
 1. **Corregir FICHA-VITRAL.md** con el diseñador. Es una propuesta; él la corrige y
    después se convierte en campos de verdad.
