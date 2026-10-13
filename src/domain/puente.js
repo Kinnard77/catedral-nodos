@@ -31,6 +31,7 @@ export function tipoDeOpcion(opcion) {
     if (opcion.clase === 'anclaje') return 'anchor'
     if (opcion.clase === 'epigrafia') return 'epigraphy'
     if (opcion.clase === 'linguistica') return 'calambur'
+    if (opcion.clase === 'simbolo') return 'symbol'
     if (opcion.pilar === 'secreto_filosofico') return 'philosophical'
     if (opcion.clase === 'dato_curioso') return 'red_herring'
     return ''
@@ -94,6 +95,8 @@ export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId, misteri
     const epigrafia = buscar('epigrafia')
     const linguistica = buscar('linguistica')
     const arenque = buscar('dato_curioso', 'dualidad_gremios')
+    // El simbolo esta en todas partes: se juega con el «como si fuera gratis».
+    const simbolos = vivas.filter((o) => o.clase === 'simbolo' && o.id !== anclajeId)
     const nucleo = deLaCadena.find((o) => o.pilar === 'secreto_filosofico')
 
     // La ruta que lee la piedra: anclaje -> epigrafia -> calambur.
@@ -102,6 +105,10 @@ export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId, misteri
     // El arenque rojo cuelga del anclaje: es la explicacion plausible que atrapa.
     if (arenque) nodos.push(comoNodo(arenque, 'red_herring', [anclaje.id]))
 
+    // Y los simbolos: HIBRIDOS. Cuelgan del anclaje —porque se ven— y a la vez
+    // son via propia hacia el final, porque su lectura sostiene la conclusion.
+    for (const simbolo of simbolos) nodos.push(comoNodo(simbolo, 'symbol', [anclaje.id]))
+
     // El calambur necesita la epigrafia; sin ella, cuelga del anclaje.
     if (linguistica) {
         nodos.push(comoNodo(linguistica, 'calambur', [epigrafia ? epigrafia.id : anclaje.id]))
@@ -109,7 +116,12 @@ export function grafoDesdeMaterial(opciones = [], anclajeId, catedralId, misteri
 
     // EL FINAL: el nucleo filosofico. Es lo primero que se decide.
     if (nucleo) {
-        const entradas = [linguistica?.id, arenque?.id, epigrafia?.id].filter(Boolean)
+        const entradas = [
+            linguistica?.id,
+            arenque?.id,
+            epigrafia?.id,
+            ...simbolos.map((s) => s.id),
+        ].filter(Boolean)
         nodos.push(
             comoNodo(nucleo, 'philosophical', entradas.length ? entradas : [anclaje.id], {
                 ancla: true,

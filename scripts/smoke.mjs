@@ -608,7 +608,14 @@ try {
 ok(falloMaterial.includes('material'), 'sin material tampoco: solo podria inventar')
 
 console.log('\n12. El GN-IEC: la especificacion del disenador, comprobable')
-ok(CLAVES_GNIEC.length === 6, `los seis tipos de nodo del GN-IEC (${CLAVES_GNIEC.length})`)
+ok(
+    CLAVES_GNIEC.length === 7,
+    `los SIETE tipos de nodo del GN-IEC, con Simbolo (${CLAVES_GNIEC.length})`,
+)
+ok(
+    CLAVES_GNIEC.includes('symbol'),
+    'y el Simbolo es uno de ellos: esta en todas partes y es hibrido',
+)
 ok(
     CLAVES_GNIEC.every((k) => TIPOS_GNIEC[k].campos.length > 0 && TIPOS_GNIEC[k].salidas.length > 0),
     'cada tipo declara sus campos y sus salidas',
@@ -1866,6 +1873,28 @@ ok(md.includes('Por verificar'), 'y su estado, que es lo que decide si vale afir
 ok(md.includes('(EJEMPLO del §4'), 'y avisa de lo que es de ejemplo y no del motor')
 ok(!materialAMarkdown([], 'X').includes('##'), 'sin material no inventa secciones')
 ok(materialAMarkdown([], 'X').includes('No hay nada sobre la mesa'), 'y lo dice')
+
+console.log('\n25. El Simbolo es HIBRIDO: cuelga del anclaje Y abre camino')
+const materialSimbolo = [
+    ...materialPrueba,
+    op('SIM-01', 'simbolo', 'anclaje_visible'),
+]
+ok(tipoDeOpcion(materialSimbolo[5]) === 'symbol', 'un simbolo es un nodo SYMBOL')
+ok(
+    tipoDeOpcion(op('SIM-02', 'simbolo', 'apocrifo')) === 'symbol',
+    'y lo es en CUALQUIER pilar: esta en todas partes',
+)
+const conSimbolo = grafoDesdeMaterial(materialSimbolo, 'ANC-01', V)
+const nodoSimbolo = conSimbolo.find((n) => n.id === 'SIM-01')
+ok(Boolean(nodoSimbolo), 'el simbolo entra en el grafo')
+ok(
+    nodoSimbolo.prereq.join() === 'ANC-01',
+    'y cuelga del anclaje, porque se VE',
+)
+ok(
+    conSimbolo.find((n) => n.ancla).prereq.includes('SIM-01'),
+    'Y ADEMAS sostiene el final: es via propia. Eso es ser hibrido',
+)
 
 console.log(`\n${fallos === 0 ? 'TODO EN VERDE' : `${fallos} PRUEBA(S) FALLIDA(S)`}\n`)
 process.exit(fallos === 0 ? 0 : 1)

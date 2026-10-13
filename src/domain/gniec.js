@@ -50,6 +50,21 @@ export const TIPOS_GNIEC = {
         ],
         salidas: ['text_data', 'spatial_target'],
     },
+    symbol: {
+        label: 'Símbolo',
+        nombre: 'Symbol_Hybrid',
+        color: '#c084fc',
+        glyph: '◇',
+        que_es: 'Una marca que hay que INTERPRETAR, y que esta en todas partes: en la piedra, en el vitral, en el suelo. HIBRIDO a proposito: cuelga del anclaje y a la vez abre camino propio hacia el final.',
+        entradas: ['el simbolo visto', 'donde mas aparece', 'la tradicion que lo explica'],
+        campos: [
+            { id: 'symbol_kind', label: 'Que simbolo es' },
+            { id: 'appearances', label: 'Donde mas aparece en la catedral' },
+            { id: 'canonical_reading', label: 'Lectura oficial' },
+            { id: 'alternative_reading', label: 'Lectura alternativa' },
+        ],
+        salidas: ['symbol_meaning', 'symbol_echo'],
+    },
     red_herring: {
         label: 'Arenque rojo canónico',
         nombre: 'Red_Herring',

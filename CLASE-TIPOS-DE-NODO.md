@@ -11,19 +11,32 @@ Esta es la clase que pediste. **Los seis tipos están en el código**
 
 ---
 
-## Quién investiga
+## Quién investiga — y esto estaba MAL en la primera version
 
-**El jugador.** El turista, con el móvil, dentro de la catedral.
+**Nosotros. Todavía no hay jugadores.**
 
-El grafo es una **herramienta de diseño**: lo dibujas tú, pero **cada nodo es un
-paso del jugador**. Por eso los nodos se llaman «investigación»: describen **lo
-que el jugador hace**, no lo que haces tú.
+Estamos en la **FASE 1**, y la Fase 1 no es diseñar un juego: es **investigar
+NUESTRO material** para llegar a saber **de qué trata el juego**. No hay jugador,
+no hay recorrido, no hay partida. Lo que hay es:
 
-Y de ahí sale la regla más importante del método:
+> **Qué tenemos en esta catedral, y qué podemos hacer con lo que tenemos.**
 
-> **Se diseña desde el final hacia atrás.** El jugador camina de la piedra a la
-> herejía; tú diseñas de la herejía a la piedra. Cada nodo nuevo que colocas es
-> **uno que hace falta ANTES** del que ya está.
+Esta fase sirve para descubrir **de qué va el juego de Valencia** —si elegimos
+Valencia—. **El de Burgos será otro juego, porque Burgos tiene otros elementos.**
+Y el final que buscamos aquí es el **clímax y desenlace de la narrativa**: la
+herejía, la revelación. Del juego, sí; de la partida, todavía no.
+
+Por eso los nodos se llaman «investigación»: **la que hacemos nosotros.** El
+GN-IEC es **nuestro mapa de investigación**, no el recorrido de nadie.
+
+**Y la regla del método sigue igual, pero cambia el sujeto:**
+
+> **Se investiga desde el final hacia atrás.** Se empieza por la conclusión —la
+> herejía que el material permite sostener— y se camina hacia atrás hasta la
+> piedra. Cada nodo que se coloca es **uno que hace falta ANTES** del que ya está.
+
+La Fase 1 termina cuando se sabe **qué historia cuenta esta catedral**. La Fase 2
+—convertir eso en recorrido para un jugador— **no ha empezado.**
 
 ---
 
@@ -109,8 +122,8 @@ EL JUGADOR VA ASÍ  ⌖  →  ⁘  →  {{⁂ | ◈}  →  ⇄  →  Φ
 IN NON E` → `⇄ el historiador lee «en el nombre de Dios»; el lingüista lee «en el
 no-ser de Dios»` → `Φ averroísmo: el alma individual se aniquila`.
 
-El arenque (`◈ el arcediano bienhechor, 1384`) cuelga de la piedra y **lleva al
-jugador por el camino equivocado** antes de que llegue al nudo.
+El arenque (`◈ el arcediano bienhechor, 1384`) cuelga de la piedra: es la
+explicación que **parece cerrar el caso** antes de que lleguemos al nudo.
 
 ---
 
@@ -126,6 +139,10 @@ ningún tipo de nodo** para:
 - **Objeto y procedencia** — un marfil, un tejido, un relicario: de dónde vino.
 - **Heráldica y linaje** — escudos, enterramientos, quién pagó.
 - **Marca de cantero** — quién labró la piedra y con qué signo.
+- **Simbología** — y es la más importante: el diseñador dice que **está en todas
+  partes** y que se juega con símbolos **«como si fueran gratis»**.
+- **Vitrales** — el programa de vidrieras.
+- **Reliquias** — qué se guarda y de dónde vino.
 
 **Decisión tuya:** ¿son **tipos nuevos** del GN-IEC, o **variantes del `anchor`**
 (evidencia visible de otra clase)? De eso depende si el grafo crece en tipos o en
@@ -144,8 +161,9 @@ cada nodo es real y qué parte es nuestra.
 | `divergence` | **20%** — el choque lo montamos | |
 | `philosophical` | **20%** — la herejía es nuestra | |
 
-Si esta tabla está bien, **el jugador puede saber en todo momento qué pisa tierra
-y qué no** — y el juego deja de ser un engaño para ser un puzle.
+**APROBADA por el diseñador.** Y sirve para algo concreto ya en la Fase 1: al
+mirar el material, se ve de un vistazo **cuánta tierra pisamos** y cuánto es
+nuestro. Si casi todo es 20%, la historia no se sostiene.
 
 ### c) El tipo Símbolo
 Pendiente de tu respuesta: **¿el símbolo es una pista que cuelga del anclaje, o un
