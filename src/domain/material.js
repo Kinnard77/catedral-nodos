@@ -286,6 +286,37 @@ export function materialDe(opciones = [], catedralId) {
     return opciones.filter((o) => o.catedralId === catedralId)
 }
 
+/**
+ * EL MATERIAL EN TEXTO, para poder sacarlo de aqui.
+ *
+ * Existe porque el material vive en el localStorage del navegador, y **ningun
+ * agente puede leer ahi**. Lo que no esta en un fichero, para un agente no
+ * existe. Esto lo convierte en algo que se puede pegar o guardar.
+ */
+export function materialAMarkdown(opciones = [], catedral = '') {
+    const vivas = opciones.filter((o) => !o.descartado)
+    if (!vivas.length) return `# Material${catedral ? ` — ${catedral}` : ''}\n\n(No hay nada sobre la mesa.)\n`
+
+    const lineas = [`# Material${catedral ? ` — ${catedral}` : ''}`, '', `${vivas.length} opción(es).`, '']
+
+    for (const [clave, pilar] of Object.entries(PILARES)) {
+        const delPilar = vivas.filter((o) => o.pilar === clave)
+        if (!delPilar.length) continue
+        lineas.push(`## ${pilar.label}`, '')
+        for (const o of delPilar) {
+            lineas.push(`- **${o.id} · ${o.titulo}** — ${ESTADOS[o.estado]?.label || o.estado}`)
+            if (o.detalle) lineas.push(`  ${o.detalle}`)
+            if (o.ubicacion) lineas.push(`  Ubicación: ${o.ubicacion}`)
+            if (o.juego) lineas.push(`  Juego lingüístico: ${o.juego}`)
+            if (o.fuente) lineas.push(`  Fuente: ${o.fuente}`)
+            if (o.ejemplo) lineas.push('  (EJEMPLO del §4: escrito por el agente, no por el motor)')
+            if (o.motivoDegradado) lineas.push(`  Nota: ${o.motivoDegradado}`)
+            lineas.push('')
+        }
+    }
+    return lineas.join('\n')
+}
+
 /** Las opciones vivas (ni descartadas), que son las que se enseñan por pilares. */
 export function opcionesVivas(opciones = []) {
     return opciones.filter((o) => !o.descartado)

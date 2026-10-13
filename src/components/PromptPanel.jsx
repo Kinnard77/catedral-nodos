@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { subjectBreakdown, totalMinutes } from '../data/catalog.js'
 import { subjectOf } from '../domain/lesson.js'
-import { claseOf, ESTADOS, opcionesVivas, PILARES, resumenMaterial } from '../domain/material.js'
+import { claseOf, ESTADOS, opcionesVivas, PILARES, materialAMarkdown, resumenMaterial } from '../domain/material.js'
 
 /**
  * PANEL IZQUIERDO: EL MATERIAL DE LA CATEDRAL.
@@ -37,6 +37,17 @@ export default function PromptPanel({
     onDescartar,
     onRecuperar,
 }) {
+    const [copiado, setCopiado] = useState(false)
+    const copiarMaterial = async () => {
+        try {
+            await navigator.clipboard.writeText(materialAMarkdown(material, catedral?.nombre || ''))
+            setCopiado(true)
+            window.setTimeout(() => setCopiado(false), 2000)
+        } catch {
+            setCopiado(false)
+        }
+    }
+
     const [notas, setNotas] = useState('')
 
     /** Qué pilar se está buscando, y el aviso PEGADO a ese pilar. */
@@ -115,8 +126,22 @@ export default function PromptPanel({
                         {catedral ? 'Qué tenemos aquí' : 'Falta la catedral'}
                     </span>
                     {material.length > 0 && (
-                        <span className="font-mono text-[10.5px] text-slate-500">
-                            {resumen.documentadas} doc · {resumen.sinVerificar} s/verificar
+                        <span className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10.5px] text-slate-500">
+                                {resumen.documentadas} doc · {resumen.sinVerificar} s/verificar
+                            </span>
+                            {/* SACAR EL MATERIAL DE AQUI. Vive en el localStorage del navegador, y
+                                ningun agente puede leer ahi: lo que no esta en un fichero, para un
+                                agente no existe. Esto lo pone en texto, para pegarlo o guardarlo. */}
+                            <button
+                                type="button"
+                                data-accion="copiar-material"
+                                onClick={copiarMaterial}
+                                title="Copiar el material como texto, para pegarlo o guardarlo en un fichero"
+                                className="rounded-md border border-ink-700 px-1.5 py-0.5 font-mono text-[10px] leading-none text-slate-400 transition-colors hover:border-aura-cyan/60 hover:text-aura-cyan"
+                            >
+                                {copiado ? 'copiado' : 'copiar'}
+                            </button>
                         </span>
                     )}
                 </div>

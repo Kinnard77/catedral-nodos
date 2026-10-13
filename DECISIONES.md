@@ -296,6 +296,44 @@ dicho si ese caso es real o es una hipótesis de formato.
 
 ---
 
+## 0.quinquies Lo acordado el 13 de octubre (turno largo con el motor)
+
+**Regla de trabajo que pidió el diseñador:** *«dejar siempre en ficheros dentro del
+proyecto las decisiones que se van tomando cada minuto, así no trabajamos a
+ciegas»*. Lo que no está en un fichero, **para un agente no existe**.
+
+### Varios agentes en el mismo repositorio
+
+En este ordenador trabajan **varios chats/agentes** sobre `catedral-nodos` y **todos
+commitean al mismo repo**. Comprobado: los commits `55d098a`…`1c58b94` los hizo otro
+agente. La norma dura está en **`AGENTS.md`**.
+
+**Un chat NO es un subagente.** El subagente lo lanzo yo, trabaja en mi tarea y me
+devuelve el resultado: es un empleado. Otro chat tiene su objetivo y su contexto, y
+no le puedo dar órdenes: es **otro turno**. Y su contexto es **capacidad
+independiente**, mientras que un subagente sale de la misma cuenta. Por eso, para
+el problema del diseñador —capacidad total—, **otro chat es mejor**.
+
+### Los cuatro pilares: la explicación ES el filtro
+
+Las definiciones del diseñador sustituyen a mis listas de ejemplos. **El mismo texto
+que se lee en el «?» del panel es el criterio que se le da al motor**
+(`PILARES.explicacion` + `filtrosDePilares()`): una sola fuente de verdad.
+
+### El apócrifo convincente son DOS mitades
+
+El diseñador lo corrigió: **no exige una fuente que se pueda ir a ver, exige que sea
+googleable**. El motor está obligado a declarar **BASE REAL** e **INJERTO** por
+separado. Sin base real nombrable no es un apócrifo: es una invención.
+
+### El material se puede sacar en texto
+
+Botón **«copiar»** en el panel: vuelca el material a markdown para pegarlo o
+guardarlo. Existe porque el material vive en el localStorage del navegador y
+**ningún agente llega ahí**.
+
+---
+
 ## 1. El método: PDC (Puzzle Dependency Chart)
 
 El diseño del gameflow es un **grafo de dependencias de puzles**: un DAG donde los nodos

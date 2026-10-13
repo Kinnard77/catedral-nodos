@@ -51,6 +51,7 @@ import {
 } from '../src/domain/gniec.js'
 import {
     anclajesDe,
+    materialAMarkdown,
     descartar,
     documentar,
     normalizarOpcion,
@@ -1852,6 +1853,19 @@ const sinFinal = grafoDesdeMaterial(materialPrueba, 'ANC-01', V, misterioSinNucl
 ok(sinFinal.length === 4, 'sin secreto filosofico en la cadena el grafo se queda sin final')
 ok(!tieneFinal(sinFinal), 'y se dice: sin final no hay grafo que disenar')
 ok(grafoDesdeMaterial(materialPrueba, 'NO-EXISTE', V).length === 0, 'un anclaje inventado no da grafo')
+
+console.log('\n24. Sacar el material del navegador: en texto')
+// El material vive en el localStorage del navegador y NINGUN agente puede leer
+// ahi. Lo que no esta en un fichero, para un agente no existe: esto lo convierte
+// en algo que se puede pegar o guardar.
+const md = materialAMarkdown(materialValencia, 'Catedral de Valencia')
+ok(md.includes('# Material — Catedral de Valencia'), 'el texto lleva el titulo y la catedral')
+ok(md.includes('## Anclaje en lo visible'), 'y agrupa por los cuatro pilares')
+ok(md.includes('ANC-01'), 'con el id de cada opcion, para poder citarla')
+ok(md.includes('Por verificar'), 'y su estado, que es lo que decide si vale afirmarlo')
+ok(md.includes('(EJEMPLO del §4'), 'y avisa de lo que es de ejemplo y no del motor')
+ok(!materialAMarkdown([], 'X').includes('##'), 'sin material no inventa secciones')
+ok(materialAMarkdown([], 'X').includes('No hay nada sobre la mesa'), 'y lo dice')
 
 console.log(`\n${fallos === 0 ? 'TODO EN VERDE' : `${fallos} PRUEBA(S) FALLIDA(S)`}\n`)
 process.exit(fallos === 0 ? 0 : 1)
