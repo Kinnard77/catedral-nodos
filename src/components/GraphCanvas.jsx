@@ -49,6 +49,8 @@ export default function GraphCanvas({
     const unionRef = useRef(null)
     const encuadradoRef = useRef('')
     const animacionRef = useRef(null)
+    // Nodo en el que ya se ha centrado la camara: evita repetir la animacion.
+    const centradoRef = useRef(null)
 
     // Referencia viva de la camara: las animaciones parten del valor actual
     // sin re-suscribir callbacks.
@@ -122,19 +124,59 @@ export default function GraphCanvas({
     )
 
     // Centra la camara en el nodo activo cuando cambia.
+    //
+    // LA GUARDA ES LO IMPORTANTE, y es la que faltaba: se centra UNA vez por
+    // activacion, no una vez por render. Sin ella, si `posiciones` cambiaba de
+    // identidad en cada render, cada render volvia a lanzar la animacion;
+    // `animarHacia` cancela la anterior y empieza otra, asi que la camara no
+    // llegaba nunca y la app se quedaba ocupada para siempre. El sintoma era
+    // justo ese: el grafo se queda frickeado, no se mueve, y hay que recargar.
+    //
+    // El encuadre automatico de arriba ya tenia su guarda (`encuadradoRef`).
+    // Esta es la misma idea.
     useEffect(() => {
         if (!activo) return
+        if (centradoRef.current === activo) return
         const posicion = posiciones.get(activo)
         if (!posicion) return
         const centro = centroDe(posicion)
-        const fueraX = centro.x < -vista.tx / vista.scale || centro.x > (-vista.tx + viewport.width) / vista.scale
+        // Se lee la camara VIVA, no la del cierre: si no, el calculo va con retraso.
+        const camara = vistaRef.current
+        const fueraX =
+            centro.x < -camara.tx / camara.scale ||
+            centro.x > (-camara.tx + viewport.width) / camara.scale
         const fueraY =
-            centro.y < -vista.ty / vista.scale || centro.y > (-vista.ty + viewport.height) / vista.scale
+            centro.y < -camara.ty / camara.scale ||
+            centro.y > (-camara.ty + viewport.height) / camara.scale
+        // Se marca como centrado PASE LO QUE PASE: si el nodo ya esta a la vista,
+        // tambien queda resuelto. Si no, el efecto volveria a mirarlo en cada
+        // render para siempre.
+        centradoRef.current = activo
         if (fueraX || fueraY) centrarEnNodo(activo)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activo, posiciones])
 
     // --- Pan y zoom --------------------------------------------------------
+    // RED DE SEGURIDAD DEL ARRASTRE. Si el `pointerup` no llega —se suelta
+    // fuera de la ventana, se pierde el foco, se cambia de pestana— `unionRef`
+    // se queda puesto y el lienzo sigue al raton SIN boton pulsado: no se puede
+    // mover nada mas y hay que recargar. Se escucha en la VENTANA, que es donde
+    // el evento acaba llegando siempre.
+    useEffect(() => {
+        const soltar = () => {
+            if (!unionRef.current) return
+            unionRef.current = null
+            setArrastrando(false)
+        }
+        window.addEventListener('pointerup', soltar)
+        window.addEventListener('pointercancel', soltar)
+        window.addEventListener('blur', soltar)
+        return () => {
+            window.removeEventListener('pointerup', soltar)
+            window.removeEventListener('pointercancel', soltar)
+            window.removeEventListener('blur', soltar)
+        }
+    }, [])
     const alPresionar = (e) => {
         if (e.button !== 0 && e.button !== 1) return
         const objetivo = e.currentTarget
