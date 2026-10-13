@@ -334,6 +334,27 @@ guardarlo. Existe porque el material vive en el localStorage del navegador y
 
 ---
 
+## 0.sexies RETIRADO: la «escala católica»
+
+Se propuso ordenar la investigación **por importancia en la escala católica** («no
+se manda al jugador a una tontería cuando se le debe mandar al Santo Cáliz»).
+
+**El diseñador lo retractó el mismo día:**
+
+> «Me retracto respecto a la escala católica. Eso cambiaría mucho el objetivo de las
+> narrativas. **Eso sesgaría los juegos tremendamente.** Elimina esa parte.»
+
+**Y tiene razón técnica:** una escala de importancia eclesiástica es un criterio
+**externo al material**. Lo que importa para la historia no lo decide la jerarquía
+de la Iglesia, lo decide **lo que el material permite contar**. Aplicarla habría
+hecho que las 50 catedrales miraran igual — justo lo contrario de «cada catedral
+tiene su propio juego».
+
+**NO REINTRODUCIR.** Si vuelve a aparecer una regla de importancia, tiene que salir
+del material y de la historia, nunca de una escala externa.
+
+---
+
 ## 1. El método: PDC (Puzzle Dependency Chart)
 
 El diseño del gameflow es un **grafo de dependencias de puzles**: un DAG donde los nodos
