@@ -9,6 +9,13 @@ Esta es la clase que pediste. **Los seis tipos están en el código**
 > nuestro—. Tu corrección es exacta: **lo conspirativo pertenece al Apócrifo
 > Convincente, no al Anclaje en lo Visible.**
 
+> **PENDIENTE: el nombre confunde y hay que cambiarlo.** Lo dice el diseñador: *«creo
+> que tendremos que cambiar la clave de GN-IEC para que no siga confundiendo»*. Y
+> tiene razón: **«Epigráfica y Conspirativa»** describe solo una parte —la
+> epigrafía— cuando lo que hay es una **plantilla base** para cualquier evidencia:
+> vitrales, arquitectura, relicarios, iconografía. **El nombre nuevo está sin
+> decidir.**
+
 ---
 
 ## Quién investiga — y esto estaba MAL en la primera version
@@ -105,26 +112,76 @@ hay hechos sobre los que apoyar la deducción.
 
 ---
 
+## Qué es este juego (y qué no es)
+
+**NO es un juego de hechos reales. Está BASADO en hechos reales, que no es lo mismo.**
+
+El propio diseñador da la referencia: **El Código Da Vinci + El Nombre de la Rosa.**
+Son **interpretaciones, conjeturas, conspiraciones**. Esto va de eso, **llevado al
+terreno del juego**.
+
+Y de ahí sale la proporción, dicha por él:
+
+| | Qué es | De dónde sale |
+|---|---|---|
+| **80%** | Hechos reales: epigrafía, lo anclado en lo visible | Se puede ir a verlo |
+| **20%** | Conspiraciones, apócrifos, calambur… | Lo ponemos nosotros |
+
+**El 80% es el suelo; el 20% es la interpretación que se apoya en él.** Si el juego
+afirmara el 20% como hecho, sería otra cosa: sería desinformación, no un thriller.
+
+---
+
 ## Esta herramienta es de ESTUDIO, no de juego
 
 Palabras del diseñador: es una **«herramienta de estudio, de investigación, de
 orden, de captura, de recopilación»**.
 
-Y esto manda sobre todo lo demás en esta fase:
-
-- **El juego está basado en hechos reales**, así que **el material no se puede
-  inventar: hay que ir a verlo.** Por eso estamos investigando.
+- **El material no se puede inventar: hay que ir a verlo.**
 - **Lo que falta no es diseño: es MAPEO.** *«A mí me encantaría tener todo el
   material ya y pasar a diseñar el juego, pero para eso tengo que hacer un mapeo de
   cada vitral, al menos de los importantes, para VER qué hay en esas obras de arte y
   qué podemos usar para nuestra narrativa.»*
-- Por eso, en esta fase, de cada evidencia se ponen **GENERALIDADES, no
-  particularidades**: la **ficha** de lo que hay que capturar en cada catedral,
-  porque el contenido todavía no se conoce.
+- Por eso, en esta fase, de cada evidencia se ponen **GENERALIDADES**: la **ficha**
+  de lo que hay que capturar, porque el contenido todavía no se conoce.
 
-**Consecuencia para lo que construimos:** cada variante de evidencia (vitral,
-arquitectura, relicario…) no es una pieza de juego: es **un formulario de captura**
-— qué hay que mirar y apuntar cuando se vaya a la catedral.
+### Qué se captura — y qué NO
+
+**CORREGIDO.** Yo propuse alturas, tramos y ubicaciones. **No es eso.** Palabras
+del diseñador:
+
+> *«No voy a capturar datos de altura, ni datos de dónde está, ni datos de tramo.
+> Voy a capturar **la accesibilidad del elemento que debe entender el jugador**.
+> Estos retos no van de investigar alturas ni datos tontos: **va de filología y de
+> filosofía** — pero todo eso **lo determina el final que estamos diseñando**.»*
+
+O sea: lo que se apunta de un vitral no es dónde cuelga, sino **si un turista puede
+leerlo, entenderlo y usarlo para la historia**. Y **qué hay que buscar lo decide el
+final**, no una lista fija: si el final es una herejía sobre el alma, se busca lo
+que hable de eso.
+
+**Consecuencia de diseño, y es fuerte:** la ficha de captura **no es fija**. Se
+deriva del final. El mismo vitral se mira distinto según la historia que se esté
+construyendo.
+
+### Sobre la Dualidad de Gremios
+
+Su papel, en palabras del diseñador: **crear tensión narrativa y encontrar alguna
+anomalía.** No es un pilar de datos: es el que **enfrenta** a quien custodia la
+materia con quien custodia el dogma.
+
+---
+
+## La base es una PLANTILLA
+
+**Todas las catedrales góticas se parecen en la base**; quizá algunas románicas o
+barrocas también. **Lo que se busca son las bases.**
+
+- **La base** = los tipos de nodo + los pilares + las reglas. **Es una plantilla.**
+- **Lo local** = el material específico de cada catedral.
+
+50 catedrales, 50 juegos distintos — **pero un solo método**, y la plantilla es lo
+que se reutiliza.
 
 ---
 
