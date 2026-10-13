@@ -11,7 +11,7 @@
  * respecto a los pilares»*. Primero QUE TENEMOS; despues, que misterio podemos
  * inducir con ello.
  *
- * LOS CUATRO PILARES (§1 del GN-IEC) son las cuatro familias de material:
+ * LOS CUATRO PILARES (§1 del GNI) son las cuatro familias de material:
  * anclaje visible, apocrifo convincente, dualidad de gremios y secreto
  * filosofico. Cada opcion pertenece a uno.
  *
@@ -176,7 +176,7 @@ export function normalizarOpcion(raw, catedralId, { fuentes = [], comprobarFuent
     }
 }
 
-/** Los anclajes: cada uno puede ser el punto de partida de un grafo GN-IEC. */
+/** Los anclajes: cada uno puede ser el punto de partida de un grafo GNI. */
 export function anclajesDe(opciones = []) {
     return opciones.filter((o) => o.clase === 'anclaje' && !o.descartado)
 }

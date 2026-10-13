@@ -2,7 +2,7 @@
  * EXPORTA EL GAMEFLOW A .graphml — para abrirlo en yEd.
  *
  * USO
- *   node scripts/graphml.mjs --modulo src/data/gameflow/gniec-ejemplo.js --out dist/gniec.graphml
+ *   node scripts/graphml.mjs --modulo src/data/gameflow/gni-ejemplo.js --out dist/gni.graphml
  *   node scripts/graphml.mjs --in datos.json --out dist/grafo.graphml
  *   node scripts/graphml.mjs --listar
  *

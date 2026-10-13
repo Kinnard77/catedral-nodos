@@ -1,5 +1,5 @@
 /**
- * GN-IEC — Grafo de Nodos de Investigación Epigráfica y Conspirativa.
+ * GNI — Grafo de Nodos de Investigación Epigráfica y Conspirativa.
  *
  * Es la especificación del diseñador, hecha código. La idea que la sostiene:
  * *toda catedral real contiene información fragmentada que permite construir un
@@ -30,8 +30,8 @@
  * (`salidas`), y eso es lo que viaja por la flecha hasta el nodo siguiente.
  */
 
-/** Los seis tipos de nodo del GN-IEC, con sus campos y sus salidas. */
-export const TIPOS_GNIEC = {
+/** Los seis tipos de nodo del GNI, con sus campos y sus salidas. */
+export const TIPOS_GNI = {
     anchor: {
         label: 'Anclaje visible',
         nombre: 'Anchor_Visible',
@@ -157,16 +157,16 @@ export const TIPOS_GNIEC = {
     },
 }
 
-export const CLAVES_GNIEC = Object.keys(TIPOS_GNIEC)
+export const CLAVES_GNI = Object.keys(TIPOS_GNI)
 
 /** El tipo de un nodo, con respaldo por si el dato viene de fuera. */
-export function tipoGniecDe(nodo) {
-    return TIPOS_GNIEC[nodo?.tipo] || null
+export function tipoGniDe(nodo) {
+    return TIPOS_GNI[nodo?.tipo] || null
 }
 
 /** Todas las salidas posibles, para validar etiquetas de arista. */
 export const SALIDAS_VALIDAS = new Set(
-    Object.values(TIPOS_GNIEC).flatMap((t) => t.salidas),
+    Object.values(TIPOS_GNI).flatMap((t) => t.salidas),
 )
 
 // ─────────────────────────────────────────────────────────────────────────────

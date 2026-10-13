@@ -1,5 +1,5 @@
 /**
- * GN-IEC — el ejemplo de la especificación, dibujable.
+ * GNI — el ejemplo de la especificación, dibujable.
  *
  * Es el caso que trae el propio documento (§4): una laja sepulcral de girola,
  * un arcediano bienhechor, una abreviatura supralineal y una resegmentación que
@@ -28,7 +28,7 @@
  * tiene un final claro por el que empezar, que es el método.
  */
 
-import { TIPOS_GNIEC } from '../../domain/gniec.js'
+import { TIPOS_GNI } from '../../domain/gni.js'
 
 /** Textos de la ficha de campo (§4), tal cual los trae la especificación. */
 const FICHA = {
@@ -81,7 +81,7 @@ const FICHA = {
 
 /** Convierte los campos de la ficha en la ficha que se lee en el lector. */
 function contenidoDe(tipo, campos) {
-    const definicion = TIPOS_GNIEC[tipo]
+    const definicion = TIPOS_GNI[tipo]
     const filas = definicion.campos
         .map((c) => {
             const valor = campos[c.id]
@@ -114,14 +114,14 @@ function nodo({ id, tipo, subject, level, title, summary, prereq, entrega, objec
         prereq,
         unlocks: [],
         entrega,
-        tags: [tipo, 'gn-iec'],
+        tags: [tipo, 'gni'],
         skills: [],
         campos: FICHA[tipo],
         content: contenidoDe(tipo, FICHA[tipo]),
     }
 }
 
-export const gniecEjemplo = [
+export const gniEjemplo = [
     nodo({
         id: 'ANC-01',
         tipo: 'anchor',

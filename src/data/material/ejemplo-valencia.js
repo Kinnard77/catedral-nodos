@@ -1,5 +1,5 @@
 /**
- * MATERIAL DE EJEMPLO — el caso del §4 de la especificación del GN-IEC.
+ * MATERIAL DE EJEMPLO — el caso del §4 de la especificación del GNI.
  *
  * OJO, Y ES IMPORTANTE: **todo entra como `por_verificar`.** El caso de la laja
  * de la girola, el arcediano Don Fernando, el 1384 y las cinco lises es el

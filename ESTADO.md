@@ -109,7 +109,7 @@ un `.apk`. Esta herramienta es el taller donde se decide el juego.
 
 | Fuente | Qué se tomó | Dónde vive hoy |
 | --- | --- | --- |
-| Tu **GN-IEC** (especificación del lienzo) | Los 6 tipos de nodo, sus campos, sus salidas, la topología de diamante y las 3 condiciones de integridad | Es lo que el lienzo dibuja ahora |
+| Tu **GNI** (especificación del lienzo) | Los 6 tipos de nodo, sus campos, sus salidas, la topología de diamante y las 3 condiciones de integridad | Es lo que el lienzo dibuja ahora |
 | Tu **GDD de UMBRA** | Las 4 Columnas, los Sellos como etiquetas, la convergencia en un metapuzzle | Guardado en `gameflow/umbra-gdd.js`, retirado |
 | Tus **plantillas antiguas** (Ficha de Enclave, SKILL-GEN-001, Biblio de Argot) | La idea de que un elemento real necesita fuente; el vocabulario de símbolos | Documentación de apoyo, y la regla de la fuente |
 | El **motor de Academia Nodos** | El despliegue progresivo, el layout por capas, el lienzo, el lector | Es el motor del lienzo, apenas tocado |
@@ -123,8 +123,8 @@ un `.apk`. Esta herramienta es el taller donde se decide el juego.
 | El lienzo (pan, zoom, encuadre, conexiones, lector) | **Funciona** (heredado) |
 | Despliegue hacia atrás desde el final | **Funciona** |
 | Etiquetas en las aristas | **Funciona** |
-| El grafo del GN-IEC dibujado y validado | **Funciona** |
-| Las 3 condiciones de integridad del GN-IEC | **Funcionan y tienen pruebas** |
+| El grafo del GNI dibujado y validado | **Funciona** |
+| Las 3 condiciones de integridad del GNI | **Funcionan y tienen pruebas** |
 | La pregunta 0 (la catedral) | **Funciona** |
 | El panel de material por los cuatro pilares | **Funciona** |
 | La verificación a mano (documentar exige fuente) | **Funciona** |
@@ -153,9 +153,9 @@ Esto es lo que hay que tumbar o confirmar. Está ordenado de lo más dudoso a lo
    anclaje. **¿Sigue teniendo sentido preguntar la catedral antes que nada?**
 4. **El campo `entrega`.** Es mi nombre para tus `salidas`. Si tu vocabulario manda, se renombra.
 5. **Los dos ejes (`subject` y `tipo`).** Hoy conviven: tema (Columnas) y clase de nodo
-   (GN-IEC). Puede que solo deba quedar uno.
+   (GNI). Puede que solo deba quedar uno.
 6. **El campo `level` (Puzle / Metapuzzle / Lore).** Lo inventé para el grafo del GDD y con el
-   GN-IEC se ha quedado sin uso claro. **Confirmado que no tiene uso en el modelo actual**: el
+   GNI se ha quedado sin uso claro. **Confirmado que no tiene uso en el modelo actual**: el
    diseñador no lo reconoce como suyo. Queda como candidato a retirar (el código se queda hasta
    que se decida).
 7. **La orientación izquierda→derecha.** Decidiste mantenerla, pero tu §3 se dibuja de arriba
@@ -187,7 +187,7 @@ Epigrafía latina, Calambur, Divergencia, Núcleo filosófico).
 
 - Si son **dos ejes que conviven**, un nodo puede ser «Filosofía + Epigrafía latina» y el color
   lo pone la clase de nodo.
-- Si la **clase de nodo sustituye al tema**, el tema sobra en el GN-IEC y solo valdría para el
+- Si la **clase de nodo sustituye al tema**, el tema sobra en el GNI y solo valdría para el
   grafo grande de la catedral.
 
 ### 6.3 Los cuatro pilares del §1
@@ -214,19 +214,19 @@ npm run capturas # capturas del flujo a capturas/
 Lo que comprueban, en corto: que el grafo solo crece, que todo prerrequisito queda a la
 izquierda de su dependiente, que el layout no depende del orden de llegada, que sin fuente un
 elemento real no se guarda, que el motor no puede inventarse el suelo que pisa, que el ancla es
-el núcleo filosófico, y que **el grafo de ejemplo del GN-IEC es válido y verosímil**.
+el núcleo filosófico, y que **el grafo de ejemplo del GNI es válido y verosímil**.
 
 ---
 
 ## 8. Dónde está cada cosa
 
 ```
-src/domain/gniec.js          Los 6 tipos del GN-IEC + las 3 condiciones de integridad
+src/domain/gni.js          Los 6 tipos del GNI + las 3 condiciones de integridad
 src/domain/lesson.js         El modelo de nodo y la paleta de tipos (los dos ejes)
 src/domain/elemento.js       Los elementos y los 5 idiomas
 src/data/catedrales.js       Las 8 catedrales que diste
 src/data/gameflow/
-  gniec-ejemplo.js           El grafo del GN-IEC (el activo)
+  gni-ejemplo.js           El grafo del GNI (el activo)
   umbra-gdd.js               El grafo del GDD (retirado, no borrado)
   catedral-dolores.js        Invención del agente (retirada)
 src/graph/graphEngine.js     Despliegue progresivo + layout (heredado)

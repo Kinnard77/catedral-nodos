@@ -124,7 +124,7 @@ export function parseRouteResponse(raw, prompt, index) {
  *
  * Existe por un fallo real: el saneado normalizaba el id que venia y luego lo
  * buscaba en un indice con las claves ORIGINALES. Con ids en mayusculas y con
- * guion —como los del GN-IEC (`PHIL-01`)— la busqueda fallaba y el motor podia
+ * guion —como los del GNI (`PHIL-01`)— la busqueda fallaba y el motor podia
  * colar un nodo duplicado. Ahora se compara por firma.
  */
 function firmaDeId(valor) {

@@ -62,7 +62,7 @@ export const SUBJECTS = {
     ciencia: { label: 'Ciencia', color: '#4ade9e', glyph: '⚗' },
     filosofia: { label: 'Filosofía', color: '#fb7185', glyph: 'Φ' },
     umbra: { label: 'UMBRA · convergencia', color: '#a78bfa', glyph: '◆' },
-    // Clases de nodo del GN-IEC (especificacion del disenador). Se buscan por
+    // Clases de nodo del GNI (especificacion del disenador). Se buscan por
     // el campo `tipo`, no por `subject`: son dos ejes distintos — el tema
     // (Columna) y la clase de nodo.
     anchor: { label: 'Anclaje visible', color: '#fbbf24', glyph: '⌖' },
@@ -93,7 +93,7 @@ export const LEVELS = {
 }
 
 export function subjectOf(pieza) {
-    // El GN-IEC manda si esta: la clase de nodo es mas especifica que el tema.
+    // El GNI manda si esta: la clase de nodo es mas especifica que el tema.
     if (pieza?.tipo && SUBJECTS[pieza.tipo]) return SUBJECTS[pieza.tipo]
     return SUBJECTS[pieza?.subject] || { label: 'General', color: '#94a3b8', glyph: '•' }
 }

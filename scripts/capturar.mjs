@@ -130,7 +130,7 @@ try {
     await esperar(3200)
     await captura('05-grafo-desde-el-final')
 
-    console.log('6. El grafo del GN-IEC completo: ruta dual, divergencia y núcleo')
+    console.log('6. El grafo del GNI completo: ruta dual, divergencia y núcleo')
     await evaluar(`document.querySelector('[data-accion="continuar"]')?.click()`)
     await esperar(1400)
     await evaluar(`document.querySelector('[data-node-id="DIV-01"] button')?.click()`)
@@ -143,7 +143,7 @@ try {
         await evaluar(`document.querySelector('[data-accion="continuar"]')?.click()`)
         await esperar(1200)
     }
-    await captura('06-gniec-completo')
+    await captura('06-gni-completo')
 
     console.log('7. Ajustes: conectar la IA (Google AI Studio)')
     await evaluar(

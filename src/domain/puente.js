@@ -5,7 +5,7 @@
  * la catedral, en el panel izquierdo) y el GRAFO (el lienzo). No habia forma de
  * pasar de una a otra, y por eso la herramienta no servia para disenar.
  *
- * Cada opcion del material YA es un nodo del GN-IEC por su clase. Lo unico que
+ * Cada opcion del material YA es un nodo del GNI por su clase. Lo unico que
  * faltaba era decirlo y encadenarlos:
  *
  *     anclaje            -> anchor          (la piedra: define de que grafo hablamos)
@@ -23,7 +23,7 @@
  */
 
 /**
- * ¿Que tipo de nodo del GN-IEC es esta opcion de material?
+ * ¿Que tipo de nodo del GNI es esta opcion de material?
  * Devuelve '' si no es ninguno: una opcion sin tipo no entra en el grafo.
  */
 export function tipoDeOpcion(opcion) {
@@ -158,7 +158,7 @@ export function leccionesDesdeMaterial(opciones = [], anclajeId, catedralId, mis
         title: nodo.titulo,
         summary: nodo.detalle,
         // `tipo` es lo que pinta el color del nodo en el lienzo (la clase del
-        // GN-IEC); `subject` es el tema, y se deja en umbra como red de seguridad.
+        // GNI); `subject` es el tema, y se deja en umbra como red de seguridad.
         tipo: nodo.tipo,
         subject: 'umbra',
         level: 1,

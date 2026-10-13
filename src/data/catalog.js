@@ -1,7 +1,7 @@
-import { gniecEjemplo } from './gameflow/gniec-ejemplo.js'
+import { gniEjemplo } from './gameflow/gni-ejemplo.js'
 
 /**
- * Catalogo semilla: el grafo del GN-IEC —la especificacion del disenador—
+ * Catalogo semilla: el grafo del GNI —la especificacion del disenador—
  * dibujable. El ancla (`ancla: true`) es el NUCLEO FILOSOFICO, o sea la
  * herejia: se empieza por el final y se camina hacia atras hasta la piedra que
  * el turista mira.
@@ -10,7 +10,7 @@ import { gniecEjemplo } from './gameflow/gniec-ejemplo.js'
  *  - `gameflow/umbra-gdd.js`     el grafo del GDD (4 rutas + metapuzzle)
  *  - `gameflow/catedral-dolores.js`  invencion del agente, sin valor
  */
-export const SEED_LESSONS = [...gniecEjemplo]
+export const SEED_LESSONS = [...gniEjemplo]
 
 /** El nodo raiz del diseno inverso: el final desde el que se trabaja hacia atras. */
 export function findAncla(lessons) {
@@ -79,7 +79,7 @@ export function buildEdges(lessons) {
 /**
  * Tipos presentes en el catalogo, con conteo de nodos.
  *
- * Agrupa por la CLASE efectiva del nodo: si trae `tipo` (GN-IEC) manda esa,
+ * Agrupa por la CLASE efectiva del nodo: si trae `tipo` (GNI) manda esa,
  * porque es mas especifica que el tema. Si no, cae al `subject` (la Columna).
  */
 export function subjectBreakdown(lessons) {

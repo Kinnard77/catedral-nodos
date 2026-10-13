@@ -2,7 +2,7 @@
  * UN GRAFO POR ANCLAJE.
  *
  * Decision tomada (y aceptada por el disenador): cada elemento visible que se
- * mapea en una catedral tiene su propio grafo GN-IEC, con su propio final —el
+ * mapea en una catedral tiene su propio grafo GNI, con su propio final —el
  * nucleo filosofico— por el que se empieza a disenar.
  *
  * Hoy solo hay un anclaje con grafo: el caso del §4 de la especificacion. Los

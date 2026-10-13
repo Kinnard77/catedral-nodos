@@ -1,16 +1,16 @@
-# CLASE — Los seis tipos de nodo del GN-IEC
+# CLASE — Los seis tipos de nodo del GNI
 
 Esta es la clase que pediste. **Los seis tipos están en el código**
-(`src/domain/gniec.js`), y aquí se explican **para usarlos**.
+(`src/domain/gni.js`), y aquí se explican **para usarlos**.
 
-> **GN-IEC = Grafo de Nodos de Investigación Epigráfica y Conspirativa.**
+> **GNI = Grafo de Nodos de Investigación Epigráfica y Conspirativa.**
 > Y el propio nombre lleva las dos capas dentro: **Epigráfica** es el 80% —lo que
 > está grabado y es real—; **Conspirativa** es el 20% —lo que se urde y es
 > nuestro—. Tu corrección es exacta: **lo conspirativo pertenece al Apócrifo
 > Convincente, no al Anclaje en lo Visible.**
 
 > **PENDIENTE: el nombre confunde y hay que cambiarlo.** Lo dice el diseñador: *«creo
-> que tendremos que cambiar la clave de GN-IEC para que no siga confundiendo»*. Y
+> que tendremos que cambiar la clave de GNI para que no siga confundiendo»*. Y
 > tiene razón: **«Epigráfica y Conspirativa»** describe solo una parte —la
 > epigrafía— cuando lo que hay es una **plantilla base** para cualquier evidencia:
 > vitrales, arquitectura, relicarios, iconografía. **El nombre nuevo está sin
@@ -34,7 +34,7 @@ Y el final que buscamos aquí es el **clímax y desenlace de la narrativa**: la
 herejía, la revelación. Del juego, sí; de la partida, todavía no.
 
 Por eso los nodos se llaman «investigación»: **la que hacemos nosotros.** El
-GN-IEC es **nuestro mapa de investigación**, no el recorrido de nadie.
+GNI es **nuestro mapa de investigación**, no el recorrido de nadie.
 
 **Y la regla del método sigue igual, pero cambia el sujeto:**
 
@@ -57,7 +57,7 @@ elementos, símbolos y reliquias.
 > Primero hay que saber **qué tenemos**. Después, **qué hacemos con lo que
 > tenemos**.
 
-De ahí que el GN-IEC sea de **investigación**: no describe una partida, describe
+De ahí que el GNI sea de **investigación**: no describe una partida, describe
 **nuestro trabajo** de averiguar qué historia permite contar esta catedral.
 
 **Consecuencia de diseño, y es grande:** lo que separemos en dos piezas —**la base
@@ -68,11 +68,11 @@ generaliza. Lo local no se puede reutilizar; lo común, sí.
 
 ## Variantes, NO tipos nuevos
 
-Decisión del diseñador: **los campos de evidencia no son tipos nuevos del GN-IEC,
+Decisión del diseñador: **los campos de evidencia no son tipos nuevos del GNI,
 son VARIANTES.** Y el mecanismo ya existe en el código: cada campo de un tipo tiene
 sus opciones.
 
-Ejemplo, el anclaje (`gniec.js`):
+Ejemplo, el anclaje (`gni.js`):
 
 ```
 { id: 'location_type', label: 'Tipo de lugar',
@@ -274,7 +274,7 @@ explicación que **parece cerrar el caso** antes de que lleguemos al nudo.
 
 ## Lo que está PENDIENTE y es decisión tuya
 
-### a) El GN-IEC es epigráfico, y no siempre hay epigrafía
+### a) El GNI es epigráfico, y no siempre hay epigrafía
 Tú lo has dicho: *«tenemos que abrir la investigación a más campos»*. Hoy **no hay
 ningún tipo de nodo** para:
 
@@ -289,7 +289,7 @@ ningún tipo de nodo** para:
 - **Vitrales** — el programa de vidrieras.
 - **Reliquias** — qué se guarda y de dónde vino.
 
-**Decisión tuya:** ¿son **tipos nuevos** del GN-IEC, o **variantes del `anchor`**
+**Decisión tuya:** ¿son **tipos nuevos** del GNI, o **variantes del `anchor`**
 (evidencia visible de otra clase)? De eso depende si el grafo crece en tipos o en
 clases.
 

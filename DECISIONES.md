@@ -193,14 +193,14 @@ esquemas en guerra: las secciones C.1–C.4 de la Ficha de Enclave (trabajo de c
 
 ---
 
-## 0.ter El GN-IEC y las decisiones que el diseñador delegó
+## 0.ter El GNI y las decisiones que el diseñador delegó
 
-El diseñador entregó una especificación propia —**GN-IEC, Grafo de Nodos de Investigación
+El diseñador entregó una especificación propia —**GNI, Grafo de Nodos de Investigación
 Epigráfica y Conspirativa**— y pidió aplicarla al lienzo. Quedó construida: los **seis tipos de
 nodo** con sus campos y sus enumeraciones, la **topología de diamante** del §3, y las **tres
 condiciones de integridad** convertidas en validadores con pruebas.
 
-### Lo que el GN-IEC enseña sobre el método
+### Lo que el GNI enseña sobre el método
 
 **El ancla es la herejía, no la piedra.** El lienzo abre por el **Núcleo filosófico** y camina
 hacia atrás hasta el **Anclaje visible**: lo último que se diseña es la laja que el turista mira.
@@ -239,7 +239,7 @@ horizontal, que es la que funciona en pantalla ancha.
 
 - **El ejemplo del §4**: la laja, el arcediano Don Fernando, 1384, las cinco lises. ¿Es real
   —y entonces necesita fuente— o es hipótesis y hay que marcarlo?
-- **Los dos ejes**: tema (Cuatro Columnas) y clase de nodo (GN-IEC) conviven hoy como ejes
+- **Los dos ejes**: tema (Cuatro Columnas) y clase de nodo (GNI) conviven hoy como ejes
   distintos. Puede que la clase de nodo sustituya al tema.
 - **Los cuatro pilares del §1**: el diagrama va de la piedra al secreto, pero diseñar es al
   revés. ¿Son el orden de diseño o el orden en que lo vive el jugador?
@@ -659,7 +659,7 @@ atasque**, y el hilo conductor **no se rompe nunca**.
 
 El sistema de colores elegido puede cargar esto, pero **hoy no distingue un hecho de la
 trama de una investigación**: `final`, `revelacion`, `emocion` son intenciones de diseño, y
-`premisa`, `anchor`, `epigraphy` son clases del GN-IEC. **Ninguna dice «esto es un hecho de
+`premisa`, `anchor`, `epigraphy` son clases del GNI. **Ninguna dice «esto es un hecho de
 la historia»**, y sin esa distinción el lienzo dibuja juego y trama como si fueran lo mismo.
 
 Mínimo que hay que añadir:

@@ -39,7 +39,7 @@ const COLOR_ESTADO = {
 }
 
 /**
- * Color por CLASE de nodo del GN-IEC. Se usa cuando la pieza no trae pilar.
+ * Color por CLASE de nodo del GNI. Se usa cuando la pieza no trae pilar.
  * Los tonos siguen la paleta de `material.js` para que el lienzo y yEd se
  * parezcan.
  */
