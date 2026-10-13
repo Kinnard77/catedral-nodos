@@ -40,6 +40,61 @@ La Fase 1 termina cuando se sabe **qué historia cuenta esta catedral**. La Fase
 
 ---
 
+## Por qué es un grafo de INVESTIGACIÓN (y no de juego)
+
+**50 catedrales. Cada una con SU juego**, porque cada una tiene sus propios
+elementos, símbolos y reliquias.
+
+**Pero todas se parecen en la base. Y la base es lo que estamos trabajando ahora.**
+
+> Primero hay que saber **qué tenemos**. Después, **qué hacemos con lo que
+> tenemos**.
+
+De ahí que el GN-IEC sea de **investigación**: no describe una partida, describe
+**nuestro trabajo** de averiguar qué historia permite contar esta catedral.
+
+**Consecuencia de diseño, y es grande:** lo que separemos en dos piezas —**la base
+que comparten las 50** y **los elementos que son de cada una**— es lo que
+generaliza. Lo local no se puede reutilizar; lo común, sí.
+
+---
+
+## Variantes, NO tipos nuevos
+
+Decisión del diseñador: **los campos de evidencia no son tipos nuevos del GN-IEC,
+son VARIANTES.** Y el mecanismo ya existe en el código: cada campo de un tipo tiene
+sus opciones.
+
+Ejemplo, el anclaje (`gniec.js`):
+
+```
+{ id: 'location_type', label: 'Tipo de lugar',
+  opts: ['laja_pavimento', 'filacteria_portada', 'capitel_historiado', 'relicario_forja'] }
+```
+
+**Siete tipos de nodo no cambian.** Lo que crece es la lista de variantes dentro de
+cada tipo: **vitrales, arquitectura, artefactos, reliquias, iconografía, documento,
+objeto, heráldica, marca de cantero** y lo que vaya saliendo.
+
+Pendiente, una por una, con su definición: qué es, qué entra y qué sale.
+
+---
+
+## La tabla del 80/20 sirve de DIAGNÓSTICO
+
+Al mirar el material y clasificar sus nodos, se ve **cuánta tierra se pisa**:
+
+- **Si hay muchos nodos del 80%** (anclajes reales, epigrafía real, datos reales que
+  despistan), **el 20% se apoya en algo** y la historia se sostiene.
+- **Si casi todo es del 20%** (calambur, divergencia, herejía), **no hay nada real
+  debajo que agarrar**: la conclusión flota, nadie se la cree, y «apócrifo
+  convincente» pierde justo la palabra «convincente».
+
+No es una regla de proporciones por capricho: es que **el jugador —y nosotros—
+necesitamos datos comprobables para creernos la deducción**. El 80% es el suelo.
+
+---
+
 ## Los seis tipos, uno a uno
 
 Cada tipo tiene **entradas** (lo que necesita), **campos** (lo que hay que
