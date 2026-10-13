@@ -80,18 +80,51 @@ Pendiente, una por una, con su definición: qué es, qué entra y qué sale.
 
 ---
 
-## La tabla del 80/20 sirve de DIAGNÓSTICO
+## El 80/20 NO es por nodo. Es la COMPOSICIÓN de la historia
 
-Al mirar el material y clasificar sus nodos, se ve **cuánta tierra se pisa**:
+**Esto lo tenía MAL y el diseñador lo corrigió.** Yo puse una tabla diciendo que
+unos tipos de nodo eran 80% y otros 20%. **No es así:**
 
-- **Si hay muchos nodos del 80%** (anclajes reales, epigrafía real, datos reales que
-  despistan), **el 20% se apoya en algo** y la historia se sostiene.
-- **Si casi todo es del 20%** (calambur, divergencia, herejía), **no hay nada real
-  debajo que agarrar**: la conclusión flota, nadie se la cree, y «apócrifo
-  convincente» pierde justo la palabra «convincente».
+- Un nodo del pilar **«Anclaje en lo Visible»** es **100% investigación real** de la
+  catedral. Ahí no hay hueco para calambur, ni divergencia, ni nada inventado.
+- Un nodo del pilar **«Apócrifo Convincente»** es **100% apócrifo**.
 
-No es una regla de proporciones por capricho: es que **el jugador —y nosotros—
-necesitamos datos comprobables para creernos la deducción**. El 80% es el suelo.
+**El 80/20 está en la MEZCLA, no en las piezas:**
+
+> **La historia final se compone de material de los cuatro pilares: alrededor del
+> 80% del material del Anclaje en lo Visible, y alrededor del 20% de los otros tres
+> pilares. Y no es una regla dura.**
+
+Y es lo que le da sentido al pilar: **el 80% real es el suelo que sostiene el 20%
+inventado.** Un nodo concreto es de un pilar; la historia es la proporción.
+
+**Utilidad práctica en la Fase 1, ahora bien planteada:** al mirar el material
+recogido, se ve **cuánto suelo real hay** frente a cuánto se ha inventado. Si el
+material es casi todo de los otros tres pilares, **la historia no se sostiene**: no
+hay hechos sobre los que apoyar la deducción.
+
+---
+
+## Esta herramienta es de ESTUDIO, no de juego
+
+Palabras del diseñador: es una **«herramienta de estudio, de investigación, de
+orden, de captura, de recopilación»**.
+
+Y esto manda sobre todo lo demás en esta fase:
+
+- **El juego está basado en hechos reales**, así que **el material no se puede
+  inventar: hay que ir a verlo.** Por eso estamos investigando.
+- **Lo que falta no es diseño: es MAPEO.** *«A mí me encantaría tener todo el
+  material ya y pasar a diseñar el juego, pero para eso tengo que hacer un mapeo de
+  cada vitral, al menos de los importantes, para VER qué hay en esas obras de arte y
+  qué podemos usar para nuestra narrativa.»*
+- Por eso, en esta fase, de cada evidencia se ponen **GENERALIDADES, no
+  particularidades**: la **ficha** de lo que hay que capturar en cada catedral,
+  porque el contenido todavía no se conoce.
+
+**Consecuencia para lo que construimos:** cada variante de evidencia (vitral,
+arquitectura, relicario…) no es una pieza de juego: es **un formulario de captura**
+— qué hay que mirar y apuntar cuando se vaya a la catedral.
 
 ---
 
@@ -202,23 +235,6 @@ ningún tipo de nodo** para:
 **Decisión tuya:** ¿son **tipos nuevos** del GN-IEC, o **variantes del `anchor`**
 (evidencia visible de otra clase)? De eso depende si el grafo crece en tipos o en
 clases.
-
-### b) Los tipos, ¿son del 80% o del 20%?
-Tu corrección abre un eje que **no está escrito en ninguna parte**: qué parte de
-cada nodo es real y qué parte es nuestra.
-
-| Tipo | Mi propuesta | ¿La corriges? |
-|---|---|---|
-| `anchor` | **80%** — real y visible | |
-| `epigraphy` | **80%** — lo que dice la piedra | |
-| `red_herring` | **80%** — el dato real que despista | |
-| `calambur` | **20%** — la segunda lectura la ponemos | |
-| `divergence` | **20%** — el choque lo montamos | |
-| `philosophical` | **20%** — la herejía es nuestra | |
-
-**APROBADA por el diseñador.** Y sirve para algo concreto ya en la Fase 1: al
-mirar el material, se ve de un vistazo **cuánta tierra pisamos** y cuánto es
-nuestro. Si casi todo es 20%, la historia no se sostiene.
 
 ### c) El tipo Símbolo
 Pendiente de tu respuesta: **¿el símbolo es una pista que cuelga del anclaje, o un
