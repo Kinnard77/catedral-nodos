@@ -205,6 +205,10 @@ export default function PromptPanel({
                             return (
                                 <div key={clave}>
                                     <div className="mb-1.5 flex items-center gap-1.5">
+                                        {/* La explicacion del pilar, A MANO y al principio: al final de la
+                                                frase se cortaba con el borde del panel. Y no es decorativa: es
+                                                el filtro con el que el motor decide que entra en este pilar. */}
+                                        <Ayuda texto={pilar.explicacion} />
                                         <span style={{ color: pilar.color }}>{pilar.glyph}</span>
                                         <span className="font-display text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                             {pilar.label}
@@ -212,9 +216,6 @@ export default function PromptPanel({
                                         <span className="font-mono text-[10px] text-slate-500">
                                             {delPilar.length}
                                         </span>
-                                        {/* La explicacion del pilar, a mano: es el
-                                            filtro con el que el motor decide. */}
-                                        <Ayuda texto={pilar.explicacion} />
                                         {/* PIDE UNA MÁS, SOLO DE ESTE PILAR. No toca los
                                             otros tres, y está aunque el pilar esté
                                             vacío: es cuando más falta hace. */}
