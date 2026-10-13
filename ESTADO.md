@@ -53,6 +53,27 @@ Reproducción: **no hay**. Sin pasos ni frecuencia. **Primera tarea de mañana:
 reproducirlo antes de tocar nada** — y si no se reproduce, preguntarle qué estaba
 haciendo cuando pasó.
 
+### CONCEPTO NUEVO: EL CONFLICTO (analisis en CONFLICTO.md)
+Dicho por el disenador: «debe haber un conflicto que es el que vamos a resolver»,
+y debe estar presente SOBRE TODO al disenar el final. Propuesta de integracion:
+
+- **El conflicto YA esta en el metodo, desperdigado y sin nombre**: la
+  `dualidad_gremios` es poder (quien manda) y el nodo `divergence` es verdad (quien
+  tiene razon). Son DOS conflictos distintos y hoy nadie dice que lo sean.
+- **Lo que falta: el final RESUELVE el conflicto.** Disenar el final y declarar el
+  conflicto son el MISMO acto. El Φ se declara EN PAREJA: CONFLICTO (partes, que
+  quiere cada una, que esta en juego) + TEORIA que lo resuelve. Si no puedes
+  escribir las dos, no tienes un final: tienes una afirmacion.
+- **No es un tipo de nodo**: nadie «hace» el conflicto. Es una propiedad del GRAFO
+  entero, como el final.
+- **Comprobacion que sale de aqui**: cada nodo tiene que MOVER el conflicto. Un nodo
+  que no lo avanza es adorno — y eso se puede comprobar por codigo.
+- **El conflicto sale del MATERIAL, no de la cabeza**: la dualidad de gremios es un
+  hecho documentado (quien pagaba, quien labraba, sus pleitos). Es del 80%.
+- Campo de captura nuevo para la ficha: **que facciones habia y por que chocaban.**
+
+---
+
 ### IDEA, para pensar: DOS VERSIONES
 El diseñador propone sacar **dos versiones**: la normal (conspirativa, mercado
 universal) y una **sesgada (católica)** para quien no quiere conspiraciones.
