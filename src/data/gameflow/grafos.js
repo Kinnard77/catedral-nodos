@@ -10,8 +10,6 @@
  * y eso es la verdad, no un hueco que haya que disimular.
  */
 
-import { gniecEjemplo } from './gniec-ejemplo.js'
-
 export const GRAFOS_POR_ANCLAJE = {
     // VACIO A PROPOSITO.
     //
