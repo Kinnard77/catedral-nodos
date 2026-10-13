@@ -30,6 +30,43 @@ Piezas: `src/domain/puente.js` (ya tiene `tipoDeOpcion`, `grafoDesdeMaterial`,
 
 ---
 
+## 0. AGENDA DE MAÑANA (dejada antes de dormir)
+
+### Aclaración: de dónde sale el «otro agente»
+**NO lo lancé yo.** Es **el otro chat del diseñador**, el de ayer — el mismo en el
+que pidió el botón «+» por pilar. Lo descubrí leyendo el historial de git, que es lo
+único que puedo leer. **No sé quién lo lanzó ni cuál es su rol: eso lo decide él.**
+
+### NO TOCAR: el «misterio»
+El otro chat metió el **misterio** dentro del grafo (la función que arma el grafo
+depende de un misterio elegido). **Yo lo había retirado** de la interfaz porque el
+diseñador lo descartó en su día («primero A, luego B»).
+
+**Decisión del diseñador: NO descartarlo aún, hay que hablarlo.** Así que: **nadie
+toca el misterio hasta esa conversación.** Ni se quita ni se amplía.
+
+### Bug reportado, SIN investigar
+> «La App (grafo de nodos) a veces se queda frickeada, no se mueve, y la tengo que
+> volver a cargar.»
+
+Reproducción: **no hay**. Sin pasos ni frecuencia. **Primera tarea de mañana:
+reproducirlo antes de tocar nada** — y si no se reproduce, preguntarle qué estaba
+haciendo cuando pasó.
+
+### Pendientes, en orden
+1. **Corregir FICHA-VITRAL.md** con el diseñador. Es una propuesta; él la corrige y
+   después se convierte en campos de verdad.
+2. **Reescribir el prompt de investigación** con todo lo hablado: accesibilidad,
+   filología, la ubicación **como mecanismo para mover al jugador**, el 80/20 de la
+   composición, y las dos reglas (sobrenatural como dato del mundo sí, como
+   explicación del enigma no).
+3. **Las variantes que faltan**, una por una: vitrales, arquitectura, artefactos,
+   reliquias, iconografía, documento, objeto, heráldica, marca de cantero. **Son
+   variantes, NO tipos nuevos del GNI.**
+4. El nombre de la clave ya está cambiado: **GNI** (antes GN-IEC).
+
+---
+
 ## 0.bis Lo que YA funciona (verificado)
 
 - **El motor conecta**: Google AI Studio por la API **nativa** (Interactions API),
