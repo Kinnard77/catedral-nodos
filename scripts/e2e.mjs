@@ -246,6 +246,11 @@ try {
         'ninguna se da por documentada sin fuente',
     )
 
+    ok(
+        (await evaluar(`document.querySelectorAll('[data-ayuda-pilar]').length`)) >= 4,
+        'cada pilar lleva su «?» con la explicación',
+    )
+
     console.log('\n4. El detalle de un anclaje')
     ok(
         await evaluar(`(() => {

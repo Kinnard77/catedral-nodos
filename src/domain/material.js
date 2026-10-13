@@ -27,6 +27,14 @@ export const PILARES = {
         glyph: '⌖',
         pregunta:
             '¿Qué hay a la vista y al alcance del público? Lajas sepulcrales, filacterias en pórticos, mensarios, zodiacos, atributos de santos…',
+        /**
+         * ESTA EXPLICACION ES TAMBIEN EL FILTRO. El mismo texto que el disenador
+         * lee al pasar el raton es el criterio con el que el motor decide si algo
+         * entra en este pilar. Una sola fuente de verdad: si cambia aqui, cambia
+         * en los dos sitios.
+         */
+        explicacion:
+            'El misterio no debe estar escondido en una cueva remota, sino a la vista. El jugador siente que el secreto estuvo siempre frente a sus ojos y nunca lo notó.',
     },
     apocrifo: {
         label: 'Apócrifo convincente',
@@ -34,6 +42,8 @@ export const PILARES = {
         glyph: '⁘',
         pregunta:
             '¿Qué se puede sostener con fuentes eclesiásticas o notariales, y qué deducción oculta se le puede colgar? Bulas censuradas, cláusulas suprimidas, minutas capitulares…',
+        explicacion:
+            'Combinar 80% de historia real comprobable con un 20% de falsificación elegante. El jugador busca los datos reales, comprueba que son ciertos y asume inconscientemente que el 20% ficticio también es real.',
     },
     dualidad_gremios: {
         label: 'Dualidad de gremios',
@@ -41,6 +51,8 @@ export const PILARES = {
         glyph: '⇄',
         pregunta:
             '¿Dónde choca la autoridad que impone el dogma con los artífices que labran la materia? Cabildo contra canteros, lapicidas y orfebres.',
+        explicacion:
+            'Oponer siempre una facción que custodia la técnica/materia (canteros, grabadores, mecánicos) contra una que custodia el dogma (inquisición, órdenes monásticas, cabildos).',
     },
     secreto_filosofico: {
         label: 'Secreto sin magia',
@@ -48,7 +60,19 @@ export const PILARES = {
         glyph: 'Φ',
         pregunta:
             '¿Qué herejía filosófica o ruptura escolástica se puede plantear? Nada sobrenatural: tiene que formularse como proposición ontológica, física o política.',
+        explicacion:
+            'Si el secreto es sobrenatural puro, rompe la tensión investigativa. Si el secreto es político, biológico, de linaje o un conocimiento tecnológico adelantado a su tiempo, el misterio se mantiene anclado al intelecto del protagonista.',
     },
+}
+
+/**
+ * Los pilares tal cual, para que el motor los use de FILTRO.
+ * Se genera desde PILARES: la pantalla y la IA leen lo mismo.
+ */
+export function filtrosDePilares() {
+    return Object.entries(PILARES)
+        .map(([clave, p]) => `- ${clave} — ${p.label}: ${p.explicacion}`)
+        .join('\n')
 }
 
 /** Las clases de opción que puede haber sobre la mesa. */

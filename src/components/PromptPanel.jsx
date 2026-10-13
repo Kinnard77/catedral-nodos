@@ -212,6 +212,9 @@ export default function PromptPanel({
                                         <span className="font-mono text-[10px] text-slate-500">
                                             {delPilar.length}
                                         </span>
+                                        {/* La explicacion del pilar, a mano: es el
+                                            filtro con el que el motor decide. */}
+                                        <Ayuda texto={pilar.explicacion} />
                                         {/* PIDE UNA MÁS, SOLO DE ESTE PILAR. No toca los
                                             otros tres, y está aunque el pilar esté
                                             vacío: es cuando más falta hace. */}
@@ -519,6 +522,31 @@ function TarjetaOpcion({
                 </div>
             )}
         </div>
+    )
+}
+
+/**
+ * EL «?» DE BLENDER: un circulito que, al pasar el raton, despliega la
+ * explicacion. Sin clics y sin cajas que estorben.
+ *
+ * Y esa explicacion NO es decorativa: es el MISMO texto que se le da al motor
+ * como filtro del pilar. Lo que el disenador lee al pasar el raton es el criterio
+ * con el que la IA decide que entra en cada pilar.
+ */
+function Ayuda({ texto }) {
+    if (!texto) return null
+    return (
+        <span className="group relative inline-flex shrink-0" tabIndex={0}>
+            <span
+                data-ayuda-pilar
+                className="flex h-[14px] w-[14px] cursor-help items-center justify-center rounded-full border border-ink-500 font-mono text-[9px] leading-none text-slate-400 transition-colors group-hover:border-aura-cyan group-hover:text-aura-cyan"
+            >
+                ?
+            </span>
+            <span className="pointer-events-none absolute left-0 top-[18px] z-40 hidden w-[300px] rounded-xl border border-ink-600 bg-ink-950/98 p-2.5 text-[10.5px] font-normal normal-case leading-relaxed tracking-normal text-slate-200 shadow-2xl group-hover:block group-focus-within:block">
+                {texto}
+            </span>
+        </span>
     )
 }
 
