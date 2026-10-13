@@ -53,6 +53,36 @@ Reproducción: **no hay**. Sin pasos ni frecuencia. **Primera tarea de mañana:
 reproducirlo antes de tocar nada** — y si no se reproduce, preguntarle qué estaba
 haciendo cuando pasó.
 
+### REGLA NUEVA: la investigación va POR IMPORTANCIA
+
+Dicho por el diseñador antes de dormir:
+
+> «La investigación del grafo de nodos debe ser **por orden de importancia en la
+> escala católica**. No vamos a enviar al jugador a investigar una tontería cuando
+> sí lo debemos enviar a ver el **Santo Cáliz**. Es decir, **las cosas importantes
+> deben pertenecer a la trama**.»
+
+Consecuencias, y hay que aplicarlas en tres sitios:
+
+1. **El prompt de investigación** debe pedir el material **ordenado por
+   importancia**, no una lista plana. Y el motor tiene que saber decirlo: qué es
+   mayor en la escala católica.
+2. **El material en el panel** debería enseñar esa importancia, no solo el pilar.
+3. **La trama se construye con lo importante.** Lo accesorio puede ser adorno o
+   arenque, pero **no puede ocupar el sitio de lo que importa**.
+
+**Y hay una tensión que resolver mañana, porque choca con el pilar 1:**
+
+El pilar 1 dice «**a la vista, lo cotidiano**» — y su propio ejemplo es una
+**laja de pavimento**, que se ve pero **no es importante en la escala católica**.
+El Santo Cáliz es lo contrario: **importantísimo Y visible**.
+
+**La pregunta, para él:** ¿la importancia **ORDENA** el material (todo entra, pero
+ordenado) o **FILTRA** lo que entra (lo menor se queda fuera)? Porque de eso
+depende si la laja desaparece del material o solo baja en la lista.
+
+---
+
 ### Pendientes, en orden
 1. **Corregir FICHA-VITRAL.md** con el diseñador. Es una propuesta; él la corrige y
    después se convierte en campos de verdad.
